@@ -10,23 +10,29 @@ html_content = r"""<!DOCTYPE html>
   <link rel="icon" type="image/svg+xml" href="app-icon.svg">
   <style>
     :root {
-      --bg-main: #101318;
-      --bg-sidebar: #181C22;
-      --bg-canvas: #0C0F13;
-      --bg-card: #1F242C;
-      --bg-popover: #222832;
-      --bg-hover: #2A313D;
-      --border-color: #303741;
-      --border-subtle: #242A34;
-      --accent: #4389F7;
-      --accent-hover: #3476dc;
-      --accent-focus: rgba(67, 137, 247, 0.35);
-      --success: #34C98A;
-      --warning: #F4B544;
-      --danger: #F16B6B;
-      --text-main: #F2F4F7;
-      --text-sub: #A9B2BE;
-      --text-muted: #788391;
+      --bg-main: #0c1118;
+      --bg-sidebar: #171d25;
+      --bg-canvas: transparent;
+      --bg-card: #1c242f;
+      --bg-popover: #141c24fa;
+      --bg-hover: #232d3b;
+      --border-color: rgba(222, 231, 239, 0.12);
+      --border-subtle: rgba(222, 231, 239, 0.08);
+      --accent: #6cb8e9;
+      --accent-hover: #58a5d8;
+      --accent-focus: rgba(108, 184, 233, 0.35);
+      --success: #34c98a;
+      --warning: #f4b544;
+      --danger: #f16b6b;
+      --text-main: #e9edf0;
+      --text-sub: #8f9aa6;
+      --text-muted: #6f7c88;
+      --ink: #e9edf0;
+      --muted: #8f9aa6;
+      --line: rgba(222, 231, 239, 0.12);
+      --line-strong: rgba(222, 231, 239, 0.22);
+      --blue: #6cb8e9;
+      --panel: #171d25;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
@@ -1035,72 +1041,485 @@ html_content = r"""<!DOCTYPE html>
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* --- Showroom Dual-State Shell & Lighting --- */
+    .shell {
+      height: 100vh;
+      min-height: 680px;
+      overflow: hidden;
+      position: relative;
+      background: radial-gradient(ellipse 48% 55% at 51% 47%, #253140 0%, #141b24 57%, #0c1118 100%);
+      display: flex;
+      flex-direction: column;
+    }
+    .shell:after {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      bottom: 84px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #cad5dd25, transparent);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .shell.edit:after {
+      display: none;
+    }
+
+    /* Showroom Top Header (60px) */
+    .top {
+      height: 60px;
+      min-height: 60px;
+      max-height: 60px;
+      background: #0e141bc9;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: relative;
+      z-index: 40;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: .01em;
+      min-width: 170px;
+      color: var(--ink);
+    }
+    .brand img.brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .brand em {
+      font-style: normal;
+      font-weight: 450;
+      color: var(--muted);
+    }
+    .topmid {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .topmid .label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .14em;
+    }
+    .ghost-btn {
+      border: 0;
+      color: #b4c2ce;
+      background: transparent;
+      padding: 7px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .ghost-btn:hover:not(:disabled) {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .ghost-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .export-btn {
+      border: 0;
+      background: #dcecf5;
+      color: #12202e;
+      font-weight: 680;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 12px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+    .export-btn:hover {
+      background: #c7e1f0;
+    }
+
+    /* Showroom Stage Area */
+    .stage {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      height: calc(100vh - 60px);
+    }
+
+    /* Left Intro Section */
+    .intro {
+      position: absolute;
+      z-index: 2;
+      left: 64px;
+      top: 110px;
+      width: 270px;
+      pointer-events: auto;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: .25em;
+      color: #77aed1;
+      text-transform: uppercase;
+    }
+    .intro h1 {
+      font-size: 36px;
+      line-height: 1.15;
+      letter-spacing: -.035em;
+      font-weight: 600;
+      margin: 16px 0;
+      color: var(--ink);
+    }
+    .intro p {
+      font-size: 12px;
+      line-height: 1.8;
+      color: #9eabb5;
+      max-width: 240px;
+    }
+    .intro .rule {
+      width: 38px;
+      height: 2px;
+      background: #68aedd;
+      margin-top: 22px;
+    }
+    .intro .count {
+      margin-top: 26px;
+      color: #6f7c88;
+      font-size: 11px;
+      letter-spacing: .1em;
+      font-weight: 500;
+    }
+
+    /* Right Stage Info Section */
+    .stageinfo {
+      position: absolute;
+      z-index: 2;
+      right: 64px;
+      top: 42%;
+      text-align: right;
+      width: 170px;
+      pointer-events: auto;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .stageinfo .index {
+      font-size: 48px;
+      color: #d7e4ed;
+      font-weight: 250;
+      letter-spacing: -.08em;
+      display: block;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stageinfo b {
+      display: block;
+      font-size: 13px;
+      font-weight: 550;
+      margin: 6px 0;
+      color: var(--ink);
+    }
+    .stageinfo small {
+      display: block;
+      color: var(--muted);
+      line-height: 1.65;
+      font-size: 11px;
+    }
+
+    /* Centerpiece Art Container */
+    .art {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: width 0.35s ease, left 0.35s ease, top 0.35s ease;
+      z-index: 5;
+    }
+
+    /* Empty Mode */
+    .shell.empty .art {
+      width: min(64vw, 770px);
+      left: 54%;
+      top: 45%;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      aspect-ratio: auto;
+    }
+    .shell.empty .art #emptyVehicleImage {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 520px;
+      object-fit: contain;
+      mix-blend-mode: screen;
+      mask-image: radial-gradient(ellipse 72% 68% at 50% 48%, #000 76%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 72% 68% at 50% 48%, #000 76%, transparent 100%);
+    }
+    .shell.empty .art .canvas-viewport {
+      display: none;
+    }
+
+    /* Artwork Preview Mode */
+    .shell.artwork .art {
+      width: min(46vw, 550px);
+      aspect-ratio: 1;
+      left: 50%;
+      top: 45%;
+      background: #f6f7f4;
+      border: 10px solid #f6f7f4;
+      border-radius: 4px;
+      box-shadow: 0 25px 75px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+      cursor: pointer;
+    }
+    .shell.artwork .art #emptyVehicleImage {
+      display: none;
+    }
+    .shell.artwork .art .canvas-viewport {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #ffffff;
+      outline: none;
+    }
+
+    /* Edit Mode */
+    .shell.edit .art {
+      width: min(39vw, 505px);
+      aspect-ratio: 1;
+      left: 50%;
+      top: 46%;
+      background: #f6f7f4;
+      border: 8px solid #f6f7f4;
+      border-radius: 4px;
+      box-shadow: 0 25px 75px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+    .shell.edit .art #emptyVehicleImage {
+      display: none;
+    }
+    .shell.edit .art .canvas-viewport {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #ffffff;
+      outline: none;
+    }
+
+    .shell.edit .intro,
+    .shell.edit .stageinfo,
+    .shell.edit .meta {
+      display: none !important;
+    }
+
+    /* Floating Sidebars in Edit Mode */
+    .side {
+      display: none;
+      position: absolute;
+      top: 16px;
+      bottom: 84px;
+      width: 236px;
+      border: 1px solid var(--line);
+      background: #141c24fa;
+      z-index: 10;
+      border-radius: 13px;
+      padding: 12px;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side.left {
+      left: 20px;
+    }
+    .side.right {
+      right: 20px;
+    }
+    .shell.edit .side.left {
+      display: flex;
+    }
+    .shell.edit .side.right {
+      display: flex;
+    }
+
+    /* Floating Pill Footer */
+    .footer {
+      position: absolute;
+      z-index: 25;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1a242edb;
+      border: 1px solid rgba(215, 230, 239, 0.15);
+      border-radius: 16px;
+      padding: 6px 10px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .footer button {
+      border: 0;
+      background: transparent;
+      color: #d3dde5;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .footer button:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+    .footer button.primary {
+      background: #dcecf5;
+      color: #152332;
+      font-weight: 680;
+    }
+    .footer button.primary:hover {
+      background: #c7e1f0;
+    }
+    .footer button.active-toggle {
+      background: rgba(108, 184, 233, 0.2);
+      color: var(--blue);
+      box-shadow: inset 0 0 0 1px var(--blue);
+    }
+    .footer .divide {
+      height: 18px;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.16);
+    }
+    .shell:not(.edit) .edit-only {
+      display: none !important;
+    }
+
+    /* Meta & Disclaimer Labels */
+    .meta {
+      position: absolute;
+      left: 32px;
+      bottom: 28px;
+      color: #73818d;
+      font-size: 11px;
+      letter-spacing: .05em;
+      z-index: 5;
+    }
+    .meta strong {
+      color: #aebcc7;
+      font-weight: 500;
+    }
+    .disclaimer {
+      position: absolute;
+      right: 32px;
+      bottom: 28px;
+      color: #7f8f9d;
+      font-size: 11px;
+      z-index: 5;
+    }
+    @media (max-width: 900px) {
+      .intro { left: 24px; top: 90px; }
+      .intro h1 { font-size: 26px; }
+      .stageinfo { display: none; }
+      .side { width: 190px; }
+    }
+
   </style>
 </head>
 <body>
+<div class="shell empty" id="shell">
+  <!-- Showroom Top Header (60px) -->
+  <header class="top">
+    <div class="brand">
+      <img class="brand-icon" src="app-icon.svg" alt="" aria-hidden="true">
+      <span>Wrap <em>Studio</em></span>
+    </div>
 
-  <!-- Top Header Navigation (48px) -->
-  <header class="app-header">
-    <div class="header-left">
-      <div class="brand-title">
-        <img class="brand-icon" src="app-icon.svg" alt="" aria-hidden="true">
-        <span>Tesla Wrap Studio</span>
-      </div>
-
-      <!-- Vehicle Model Selector Trigger -->
+    <!-- Vehicle Model Selector Trigger -->
+    <div class="topmid">
+      <span class="label">车型</span>
       <button type="button" class="model-trigger-btn" id="btnModelTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="modelSelectModal" title="切换特斯拉官方车型模板">
         <span id="modelBtnLabel">🚘 Model Y L</span>
         <span id="modelResBadge" class="badge">1024×1024</span>
-        <span style="font-size: 10px; color: var(--text-muted);">▾</span>
+        <span style="font-size: 10px; color: var(--muted); margin-left: 2px;">▾</span>
       </button>
-
-      <!-- Hidden standard select element for automation and programmatic compatibility -->
-      <select id="modelSelect" style="display: none;">
-        <optgroup label="Model Y 系列">
-          <option value="modely-l" selected>Model Y L</option>
-          <option value="modely">Model Y (经典版)</option>
-          <option value="modely-2025-base">Model Y 焕新版 (标准版)</option>
-          <option value="modely-2025-premium">Model Y 焕新版 (长续航版)</option>
-          <option value="modely-2025-performance">Model Y 焕新版 (高性能版)</option>
-        </optgroup>
-        <optgroup label="Model 3 系列">
-          <option value="model3">Model 3 (经典版)</option>
-          <option value="model3-2024-base">Model 3 焕新版 (标准/长续航)</option>
-          <option value="model3-2024-performance">Model 3 焕新版 (高性能版)</option>
-        </optgroup>
-        <optgroup label="Cybertruck 赛博皮卡">
-          <option value="cybertruck">Cybertruck (赛博皮卡)</option>
-        </optgroup>
-        <optgroup label="Model S 系列">
-          <option value="models-2021">Model S (2021+)</option>
-          <option value="models-2025-plaid">Model S Plaid (2025+)</option>
-        </optgroup>
-        <optgroup label="Model X 系列">
-          <option value="modelx-2021">Model X (2021+)</option>
-        </optgroup>
-      </select>
-
-      <div class="header-divider"></div>
-
-      <!-- Project Menu Trigger -->
-      <div style="position: relative;">
-        <button id="btnProjectMenu" type="button" title="工程文件操作" aria-haspopup="menu" aria-expanded="false" aria-controls="projectMenuDropdown">📁 工程 ▾</button>
-        <div id="projectMenuDropdown" class="popover-menu" role="menu" aria-label="工程文件操作菜单">
-          <button type="button" class="menu-item" id="menuItemOpen" role="menuitem">📂 打开工程</button>
-          <button type="button" class="menu-item" id="menuItemSave" role="menuitem">💾 保存工程</button>
-        </div>
-      </div>
-
-      <!-- Project File Input & Direct Buttons for programmatic compatibility -->
-      <input type="file" id="projectFileInput" accept=".json" style="display: none;">
-      <button id="btnOpenProject" style="display: none;">📂 打开工程</button>
-      <button id="btnSaveProject" style="display: none;">💾 保存工程</button>
     </div>
 
+    <!-- Hidden standard select element for automation and programmatic compatibility -->
+    <select id="modelSelect" style="display: none;">
+      <optgroup label="Model Y 系列">
+        <option value="modely-l" selected>Model Y L</option>
+        <option value="modely">Model Y (经典版)</option>
+        <option value="modely-2025-base">Model Y 焕新版 (标准版)</option>
+        <option value="modely-2025-premium">Model Y 焕新版 (长续航版)</option>
+        <option value="modely-2025-performance">Model Y 焕新版 (高性能版)</option>
+      </optgroup>
+      <optgroup label="Model 3 系列">
+        <option value="model3">Model 3 (经典版)</option>
+        <option value="model3-2024-base">Model 3 焕新版 (标准/长续航)</option>
+        <option value="model3-2024-performance">Model 3 焕新版 (高性能版)</option>
+      </optgroup>
+      <optgroup label="Cybertruck 赛博皮卡">
+        <option value="cybertruck">Cybertruck (赛博皮卡)</option>
+      </optgroup>
+      <optgroup label="Model S 系列">
+        <option value="models-2021">Model S (2021+)</option>
+        <option value="models-2025-plaid">Model S Plaid (2025+)</option>
+      </optgroup>
+      <optgroup label="Model X 系列">
+        <option value="modelx-2021">Model X (2021+)</option>
+      </optgroup>
+    </select>
+
+    <div class="header-divider"></div>
+
+    <!-- Project Menu Trigger -->
+    <div style="position: relative;">
+      <button id="btnProjectMenu" type="button" class="ghost-btn" title="工程文件操作" aria-haspopup="menu" aria-expanded="false" aria-controls="projectMenuDropdown">📁 工程 ▾</button>
+      <div id="projectMenuDropdown" class="popover-menu" role="menu" aria-label="工程文件操作菜单">
+        <button type="button" class="menu-item" id="menuItemOpen" role="menuitem">📂 打开工程</button>
+        <button type="button" class="menu-item" id="menuItemSave" role="menuitem">💾 保存工程</button>
+      </div>
+    </div>
+
+    <!-- Project File Input & Direct Buttons for programmatic compatibility -->
+    <input type="file" id="projectFileInput" accept=".json" style="display: none;">
+    <button id="btnOpenProject" style="display: none;">📂 打开工程</button>
+    <button id="btnSaveProject" style="display: none;">💾 保存工程</button>
+
     <!-- Center Navigation: Undo/Redo & Draft Status -->
-    <div class="header-center">
-      <button id="btnUndo" disabled title="撤销 (Ctrl/Cmd+Z)">↺ 撤销</button>
-      <button id="btnRedo" disabled title="重做 (Ctrl/Cmd+Shift+Z)">↻ 重做</button>
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <button id="btnUndo" class="ghost-btn" disabled title="撤销 (Ctrl/Cmd+Z)">↺ 撤销</button>
+      <button id="btnRedo" class="ghost-btn" disabled title="重做 (Ctrl/Cmd+Shift+Z)">↻ 重做</button>
       <div class="header-divider"></div>
 
       <!-- Draft Status Badge & Popover -->
@@ -1121,52 +1540,80 @@ html_content = r"""<!DOCTYPE html>
       </div>
     </div>
 
+    <div style="flex: 1;"></div>
+
     <!-- Right Navigation: Primary Export Menu -->
-    <div class="header-right">
-      <div style="position: relative;">
-        <button id="btnExportMenu" type="button" class="btn-primary" title="打开车机贴图与 U 盘包导出检查面板" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportPanelModal">⬇️ 导出 ▾</button>
-        <div id="exportPanelModal" class="popover-menu" role="dialog" aria-label="车身涂装导出" tabindex="-1">
-          <div style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">车机贴图导出检查</div>
-          <div class="export-check-item">
-            <span class="export-check-label">适配车型</span>
-            <span class="export-check-val" id="expCheckModel">Model Y L</span>
-          </div>
-          <div class="export-check-item">
-            <span class="export-check-label">导出尺寸</span>
-            <span class="export-check-val" id="expCheckRes">1024 × 1024</span>
-          </div>
-          <div class="export-check-item">
-            <span class="export-check-label">白区裁切</span>
-            <span class="export-check-val" id="expCheckClip">已启用 (仅涂装区)</span>
-          </div>
-          <div class="export-check-item">
-            <span class="export-check-label">越界状态</span>
-            <span class="export-check-val" id="expCheckOverflow">0 越界</span>
-          </div>
-          <div class="export-check-item">
-            <span class="export-check-label">预估体积</span>
-            <span class="export-check-val ok" id="expCheckSize">计算中...</span>
-          </div>
-          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
-            <button id="btnExportPNG" class="btn-primary" style="width: 100%;" title="导出车规 PNG 贴图">⬇️ 导出车机贴图 (PNG)</button>
-            <button id="btnExportZip" class="btn-action" style="width: 100%;" title="生成标准 U 盘目录 Wraps/ 压缩包">📦 下载 U盘包 (ZIP)</button>
-          </div>
+    <div style="position: relative;">
+      <button id="btnExportMenu" type="button" class="export-btn" title="打开车机贴图与 U 盘包导出检查面板" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportPanelModal">导出贴图　↗</button>
+      <div id="exportPanelModal" class="popover-menu" role="dialog" aria-label="车身涂装导出" tabindex="-1">
+        <div style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">车机贴图导出检查</div>
+        <div class="export-check-item">
+          <span class="export-check-label">适配车型</span>
+          <span class="export-check-val" id="expCheckModel">Model Y L</span>
+        </div>
+        <div class="export-check-item">
+          <span class="export-check-label">导出尺寸</span>
+          <span class="export-check-val" id="expCheckRes">1024 × 1024</span>
+        </div>
+        <div class="export-check-item">
+          <span class="export-check-label">白区裁切</span>
+          <span class="export-check-val" id="expCheckClip">已启用 (仅涂装区)</span>
+        </div>
+        <div class="export-check-item">
+          <span class="export-check-label">越界状态</span>
+          <span class="export-check-val" id="expCheckOverflow">0 越界</span>
+        </div>
+        <div class="export-check-item">
+          <span class="export-check-label">预估体积</span>
+          <span class="export-check-val ok" id="expCheckSize">计算中...</span>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+          <button id="btnExportPNG" class="btn-primary" style="width: 100%;" title="导出车规 PNG 贴图">⬇️ 导出车机贴图 (PNG)</button>
+          <button id="btnExportZip" class="btn-action" style="width: 100%;" title="生成标准 U 盘目录 Wraps/ 压缩包">📦 下载 U盘包 (ZIP)</button>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Model Selector Popover Modal (Positioned below Model Trigger) -->
+  <!-- Model Selector Popover Modal -->
   <div id="modelSelectModal" class="popover-menu" role="dialog" aria-label="选择特斯拉车型模板" tabindex="-1">
     <div id="modelListContainer" role="listbox" aria-label="特斯拉车型模板列表">
       <!-- Populated dynamically by JS -->
     </div>
   </div>
 
-  <!-- App Main Body (248px Left + Flexible Canvas Stage + 272px Right) -->
-  <div class="app-body">
-    <!-- Left Sidebar: Material & Layers (248px) -->
-    <aside class="sidebar left-sidebar">
+  <!-- Stage Area (Centerpiece) -->
+  <main class="stage" id="stageMain">
+    <!-- Intro (Left) -->
+    <div class="intro" id="stageIntro">
+      <div class="eyebrow">YOUR CANVAS / 01</div>
+      <h1 id="headline">从一张<br>空白车身开始。</h1>
+      <p id="summary">选择图案与位置，在二维车身展开图上慢慢完成属于你的涂装。</p>
+      <div class="rule"></div>
+      <div class="count" id="introCount">MODEL Y L　/　1024 × 1024</div>
+    </div>
+
+    <!-- Visual Art & Real Canvas Centerpiece -->
+    <div class="art" id="artContainer" aria-label="Model Y L 二维车身展开图">
+      <img id="emptyVehicleImage" src="custom-wraps/modely-l/vehicle_image.png" alt="Model Y L 车型外观参考图">
+      <div class="canvas-viewport" id="canvasViewport" tabindex="0">
+        <div class="canvas-zoom-container" id="canvasZoomContainer">
+          <div class="canvas-wrapper" id="canvasWrapper">
+            <canvas id="mainCanvas" width="1024" height="1024"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage Info (Right) -->
+    <div class="stageinfo" id="stageInfo">
+      <span class="index">01</span>
+      <b id="stageTitle">车型外观参考</b>
+      <small id="stageDesc">尚未映射贴图<br>设计以二维展开图为准</small>
+    </div>
+
+    <!-- Left Sidebar: Material & Layers (Floating in Edit Mode) -->
+    <aside class="side left sidebar left-sidebar" id="leftSidebar">
       <div class="sidebar-tabs">
         <button class="sidebar-tab active" id="tabBtnMaterial" onclick="switchLeftTab('material')">素材</button>
         <button class="sidebar-tab" id="tabBtnLayers" onclick="switchLeftTab('layers')">
@@ -1188,11 +1635,11 @@ html_content = r"""<!DOCTYPE html>
 
         <div class="panel-section" style="flex: 1;">
           <div class="section-title">
-            <span>自定义素材库</span>
-            <span style="font-size: 11px; color: var(--text-muted);">上传图片开始创作</span>
+            <span>漫威涂装素材库</span>
+            <span style="font-size: 11px; color: var(--muted);">6 张预设</span>
           </div>
           <div class="preset-grid" id="presetContainer">
-            <!-- Populated dynamically by JS (2-column layout) -->
+            <!-- Populated dynamically by JS -->
           </div>
         </div>
       </div>
@@ -1202,7 +1649,7 @@ html_content = r"""<!DOCTYPE html>
         <div class="panel-section" style="flex: 1; display: flex; flex-direction: column;">
           <div class="section-title">
             <span>图层层级</span>
-            <span style="font-size: 11px; color: var(--text-muted);">顶部图层优先渲染</span>
+            <span style="font-size: 11px; color: var(--muted);">顶部图层优先渲染</span>
           </div>
           <div class="layer-list" id="layerList">
             <!-- Populated by JS -->
@@ -1211,62 +1658,8 @@ html_content = r"""<!DOCTYPE html>
       </div>
     </aside>
 
-    <!-- Center Stage: Canvas Viewport -->
-    <main class="stage-container">
-      <!-- Stage Toolbar (36px) -->
-      <div class="stage-toolbar">
-        <div class="stage-toolbar-group">
-          <button id="btnZoomFit" class="btn-sm" title="自适应居中完整视野">适应视野</button>
-          <button id="btnZoom100" class="btn-sm" title="按 100% 原始像素查看">100%</button>
-          <span id="zoomLevelLabel" style="font-size: 11px; color: var(--text-sub); min-width: 34px; text-align: center; white-space: nowrap;">100%</span>
-          <div style="width: 1px; height: 14px; background: var(--border-color); margin: 0 4px; flex-shrink: 0;"></div>
-          <label title="开启后，实时以蒙版裁切显示最终导出真实效果" id="lblClipPreview">
-            <input type="checkbox" id="chkClipPreview"> 裁切预览
-          </label>
-          <div style="position: relative;">
-            <button id="btnDisplaySettings" type="button" class="btn-sm" title="官方轮廓线与越界告警框设置" aria-haspopup="dialog" aria-expanded="false" aria-controls="displaySettingsDropdown">显示设置 ▾</button>
-            <div id="displaySettingsDropdown" class="popover-menu" role="dialog" aria-label="视图与显示设置" tabindex="-1">
-              <label style="padding: 4px 0;"><input type="checkbox" id="chkShowTemplate" checked> 官方轮廓</label>
-              <label style="padding: 4px 0;"><input type="checkbox" id="chkSafetyAlert" checked> 越界告警</label>
-            </div>
-          </div>
-        </div>
-
-        <div class="stage-toolbar-group">
-          <span style="font-size: 11px; color: var(--text-muted);">按住空格可拖拽平移 · 滚轮缩放</span>
-        </div>
-      </div>
-
-      <!-- Non-intrusive Floating Draft Restore Banner -->
-      <div id="draftRestoreBanner" class="draft-restore-banner" style="display: none;">
-        <div class="draft-banner-main">
-          <span style="font-size: 14px;">💡</span>
-          <span class="draft-banner-title">检测到未完成本地草稿</span>
-          <span class="draft-banner-desc" id="draftBannerDesc">车型：Model Y L · 2 个图层 · 暂存时间：16:20</span>
-        </div>
-        <div class="draft-banner-actions">
-          <button id="btnRestoreDraft" class="btn-sm btn-primary">✨ 恢复草稿</button>
-          <button id="btnDiscardDraft" class="btn-sm" title="忽略本次提示">✕ 忽略</button>
-        </div>
-      </div>
-
-      <!-- Subtle Clip Mode Notice -->
-      <div class="clip-notice" id="clipNotice">
-        ℹ️ 裁切预览已开启：仅显示可喷涂车漆区域，天幕/车窗/缝隙等非漆面内容已自动裁切隐藏。在此模式下仍可自由选中拖拽。
-      </div>
-
-      <!-- Canvas Viewport -->
-      <div class="canvas-viewport" id="canvasViewport" tabindex="0">
-        <div class="canvas-zoom-container" id="canvasZoomContainer">
-          <div class="canvas-wrapper" id="canvasWrapper">
-            <canvas id="mainCanvas" width="1024" height="1024"></canvas>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Right Sidebar: Properties & Inspection (272px) -->
-    <aside class="sidebar right-sidebar">
+    <!-- Right Sidebar: Properties & Inspection (Floating in Edit Mode) -->
+    <aside class="side right sidebar right-sidebar" id="rightSidebar">
       <div class="sidebar-tabs">
         <button class="sidebar-tab active" id="tabBtnProps" onclick="switchRightTab('props')">属性</button>
         <button class="sidebar-tab" id="tabBtnInspect" onclick="switchRightTab('inspect')">
@@ -1279,10 +1672,10 @@ html_content = r"""<!DOCTYPE html>
         <div class="panel-section" id="selectionPropsPanel">
           <div class="section-title">图层精确调整</div>
 
-          <div id="noSelectionMsg" style="font-size: 12px; color: var(--text-sub); text-align: center; padding: 28px 8px; line-height: 20px;">
+          <div id="noSelectionMsg" style="font-size: 12px; color: var(--muted); text-align: center; padding: 28px 8px; line-height: 20px;">
             <div style="font-size: 24px; margin-bottom: 6px;">👆</div>
             在画布或图层列表中选择一个素材进行精确调整<br>
-            <span style="font-size: 11px; color: var(--text-muted);">支持直接拖拽、手柄缩放、旋转与快捷键</span>
+            <span style="font-size: 11px; color: var(--muted);">支持直接拖拽、手柄缩放、旋转与快捷键</span>
           </div>
 
           <div id="selectionPropsForm" style="display: none; flex-direction: column; gap: 10px;">
@@ -1338,7 +1731,7 @@ html_content = r"""<!DOCTYPE html>
 
             <div class="form-row" style="margin-top: 2px;">
               <button id="btnDuplicateLayer" style="width: 100%; justify-content: center;">📑 复制图层</button>
-              <button id="btnDeleteLayer" style="width: 100%; justify-content: center; color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">🗑️ 删除</button>
+              <button id="btnDeleteLayer" style="width: 100%; justify-content: center; color: var(--danger); border-color: rgba(241, 107, 107, 0.3);">🗑️ 删除</button>
             </div>
           </div>
         </div>
@@ -1435,28 +1828,59 @@ html_content = r"""<!DOCTYPE html>
         </div>
       </div>
     </aside>
+
+    <!-- Floating Pill Footer Navigation -->
+    <div class="footer" id="floatingFooter">
+      <button type="button" id="footerAddBtn">＋　添加贴图</button>
+      <span class="divide"></span>
+      <button type="button" class="primary" id="footerEditBtn">编辑定制　↗</button>
+      <button type="button" id="footerClipBtn">裁切预览</button>
+      <span class="divide edit-only"></span>
+      <button type="button" id="btnZoomFit" class="btn-sm edit-only" title="自适应居中完整视野">适应视野</button>
+      <button type="button" id="btnZoom100" class="btn-sm edit-only" title="按 100% 原始像素查看">100%</button>
+      <span id="zoomLevelLabel" class="edit-only" style="font-size: 11px; color: var(--muted); min-width: 32px; text-align: center;">100%</span>
+    </div>
+
+    <!-- Floating Draft Restore Banner -->
+    <div id="draftRestoreBanner" class="draft-restore-banner" style="display: none;">
+      <div class="draft-banner-main">
+        <span style="font-size: 14px;">💡</span>
+        <span class="draft-banner-title">检测到未完成本地草稿</span>
+        <span class="draft-banner-desc" id="draftBannerDesc">车型：Model Y L · 2 个图层 · 暂存时间：16:20</span>
+      </div>
+      <div class="draft-banner-actions">
+        <button id="btnRestoreDraft" class="btn-sm btn-primary">✨ 恢复草稿</button>
+        <button id="btnDiscardDraft" class="btn-sm" title="忽略本次提示">✕ 忽略</button>
+      </div>
+    </div>
+
+    <!-- Clip Mode Notice -->
+    <div class="clip-notice" id="clipNotice">
+      ℹ️ 裁切预览已开启：仅显示可喷涂车漆区域，天幕/车窗/缝隙等非漆面内容已自动裁切隐藏。在此模式下仍可自由选中拖拽。
+    </div>
+
+    <!-- Showroom Meta & Disclaimer -->
+    <div class="meta" id="showroomMeta"><strong>展示效果</strong>　·　光影仅用于界面展示</div>
+    <div class="disclaimer" id="showroomDisclaimer">导出以二维裁切结果为准</div>
+  </main>
+
+  <!-- Compatibility Hidden Status & Settings -->
+  <div id="compatStatusContainer" style="display: none;">
+    <span id="statusModel"></span>
+    <span id="statusDimensions"></span>
+    <span id="statusSelectedLayer"></span>
+    <span id="statusOverflow"></span>
+    <span id="statusZoom"></span>
+    <input type="checkbox" id="chkShowTemplate" checked>
+    <input type="checkbox" id="chkSafetyAlert" checked>
+    <input type="checkbox" id="chkClipPreview">
+    <label id="lblClipPreview"></label>
+    <button id="btnDisplaySettings" type="button"></button>
+    <div id="displaySettingsDropdown" class="popover-menu"></div>
   </div>
+</div>
 
-  <!-- Bottom Status Footer (24px) -->
-  <footer class="app-footer">
-    <div class="footer-section">
-      <span id="statusModel">Model Y L (Model Y)</span>
-      <div class="footer-divider"></div>
-      <span id="statusDimensions">1024 × 1024 px</span>
-    </div>
-    <div class="footer-section">
-      <span id="statusSelectedLayer">未选中图层</span>
-      <div class="footer-divider"></div>
-      <span id="statusOverflow">0 越界</span>
-    </div>
-    <div class="footer-section">
-      <span id="statusZoom">100%</span>
-      <div class="footer-divider"></div>
-      <span style="color: var(--text-muted);">空格拖拽平移 · 滚轮以指针缩放</span>
-    </div>
-  </footer>
-
-  <div id="toast" class="toast">提示信息</div>
+<div id="toast" class="toast">提示信息</div>
 
   <!-- Scripts -->
   <script src="presets.js"></script>
@@ -1472,6 +1896,93 @@ html_content = r"""<!DOCTYPE html>
         if (state.isFitMode) adjustZoom('fit');
       }
     }
+
+
+    // --- Showroom Dual-State Mode Logic ---
+    function updateViewState() {
+      const shell = document.getElementById('shell');
+      if (!shell) return;
+      const curM = (window.TESLA_MODELS && window.TESLA_MODELS[state.currentModel]) || { name: 'Model Y L', width: 1024, height: 1024, vehicleImage: 'custom-wraps/modely-l/vehicle_image.png' };
+      const mw = canvas.width || curM.width || 1024;
+      const mh = canvas.height || curM.height || 1024;
+      const hasLayers = state.layers && state.layers.length > 0;
+      const isEdit = state.viewMode === 'edit';
+
+      shell.classList.toggle('empty', !isEdit && !hasLayers);
+      shell.classList.toggle('artwork', !isEdit && hasLayers);
+      shell.classList.toggle('edit', isEdit);
+
+      const headline = document.getElementById('headline');
+      const summary = document.getElementById('summary');
+      const introCount = document.getElementById('introCount');
+      const stageTitle = document.getElementById('stageTitle');
+      const stageDesc = document.getElementById('stageDesc');
+      const editBtn = document.getElementById('footerEditBtn');
+      const emptyImg = document.getElementById('emptyVehicleImage');
+      const artContainer = document.getElementById('artContainer');
+
+      if (introCount) {
+        introCount.textContent = `${curM.name.toUpperCase()}　/　${mw} × ${mh}`;
+      }
+      if (emptyImg && curM.vehicleImage) {
+        emptyImg.src = curM.vehicleImage;
+        emptyImg.alt = `${curM.name} 车型外观参考图`;
+      }
+      if (artContainer) {
+        artContainer.setAttribute('aria-label', `${curM.name} 二维车身展开图`);
+      }
+
+      if (isEdit) {
+        if (editBtn) editBtn.textContent = '返回预览　↗';
+      } else if (hasLayers) {
+        if (headline) headline.innerHTML = '让每一条线，<br>成为你的标记。';
+        if (summary) summary.textContent = '让作品先占据视线；需要时再进入精细编辑，调整每一个图层。';
+        if (stageTitle) stageTitle.textContent = '二维车身展开图';
+        if (stageDesc) stageDesc.innerHTML = '此处为贴图布局预览<br>并非实车渲染';
+        if (editBtn) editBtn.textContent = '编辑定制　↗';
+      } else {
+        if (headline) headline.innerHTML = '从一张<br>空白车身开始。';
+        if (summary) summary.textContent = '选择图案与位置，在二维车身展开图上慢慢完成属于你的涂装。';
+        if (stageTitle) stageTitle.textContent = '车型外观参考';
+        if (stageDesc) stageDesc.innerHTML = '尚未映射贴图<br>设计以二维展开图为准';
+        if (editBtn) editBtn.textContent = '编辑定制　↗';
+      }
+
+      const clipBtn = document.getElementById('footerClipBtn');
+      if (clipBtn) {
+        clipBtn.classList.toggle('active-toggle', !!state.clipPreview);
+      }
+
+      const isArtwork = !isEdit && hasLayers;
+      if (isArtwork) {
+        const targetW = Math.min(window.innerWidth * 0.46, 550) - 20;
+        state.zoom = Math.min(targetW / mw, targetW / mh);
+        adjustZoom(state.zoom);
+      } else if (isEdit) {
+        const targetW = Math.min(window.innerWidth * 0.39, 505) - 16;
+        state.zoom = Math.min(targetW / mw, targetW / mh);
+        adjustZoom(state.zoom);
+      } else {
+        adjustZoom('fit');
+      }
+      render();
+    }
+    window.updateViewState = updateViewState;
+
+    function enterEditMode(initialTab) {
+      state.viewMode = 'edit';
+      if (initialTab) {
+        switchLeftTab(initialTab);
+      }
+      updateViewState();
+    }
+    window.enterEditMode = enterEditMode;
+
+    function exitEditMode() {
+      state.viewMode = 'preview';
+      updateViewState();
+    }
+    window.exitEditMode = exitEditMode;
 
     // --- Tab Switching Handlers ---
     function switchLeftTab(tabName) {
@@ -1997,6 +2508,7 @@ html_content = r"""<!DOCTYPE html>
 
     // --- Application State ---
     const state = {
+      viewMode: 'preview',
       layers: [],
       selectedLayerId: null,
       zoom: 1.0,
@@ -2364,6 +2876,7 @@ html_content = r"""<!DOCTYPE html>
 
       updateStatusBar();
       showToast(`已切换至 ${model.name}（${mw}×${mh}）`);
+      updateViewState();
       return buildBinaryMask(modelId);
     }
 
@@ -2469,6 +2982,46 @@ html_content = r"""<!DOCTYPE html>
         updateStatusBar();
         togglePopover('exportPanelModal', e);
       };
+            // Showroom Floating Footer Handlers
+      const footerAdd = document.getElementById('footerAddBtn');
+      if (footerAdd) {
+        footerAdd.onclick = () => {
+          enterEditMode('material');
+        };
+      }
+      const footerEdit = document.getElementById('footerEditBtn');
+      if (footerEdit) {
+        footerEdit.onclick = () => {
+          if (state.viewMode === 'edit') {
+            exitEditMode();
+          } else {
+            enterEditMode();
+          }
+        };
+      }
+      const footerClip = document.getElementById('footerClipBtn');
+      if (footerClip) {
+        footerClip.onclick = () => {
+          state.clipPreview = !state.clipPreview;
+          const chk = document.getElementById('chkClipPreview');
+          if (chk) chk.checked = state.clipPreview;
+          const notice = document.getElementById('clipNotice');
+          if (notice) notice.style.display = state.clipPreview ? 'block' : 'none';
+          footerClip.classList.toggle('active-toggle', state.clipPreview);
+          const expCheckClip = document.getElementById('expCheckClip');
+          if (expCheckClip) expCheckClip.innerText = state.clipPreview ? '已启用 (仅涂装区)' : '未启用 (完整显示)';
+          render();
+          showToast(state.clipPreview ? '已开启裁切预览' : '已关闭裁切预览');
+        };
+      }
+      const artContainer = document.getElementById('artContainer');
+      if (artContainer) {
+        artContainer.addEventListener('click', (e) => {
+          if (state.viewMode !== 'edit' && state.layers && state.layers.length > 0) {
+            enterEditMode();
+          }
+        });
+      }
       document.getElementById('btnDisplaySettings').onclick = (e) => togglePopover('displaySettingsDropdown', e);
 
       document.getElementById('menuItemOpen').onclick = () => {
@@ -2582,11 +3135,12 @@ html_content = r"""<!DOCTYPE html>
 
         state.layers.push(newLayer);
         state.selectedLayerId = newLayer.id;
+        state.viewMode = 'edit';
         saveHistory();
         switchLeftTab('layers');
         updateLayerListUI();
         updatePropertyPanel();
-        render();
+        updateViewState();
         updateStatusBar();
         showToast(`已添加图层：${name}`);
       };
@@ -2605,7 +3159,7 @@ html_content = r"""<!DOCTYPE html>
       saveHistory();
       updateLayerListUI();
       updatePropertyPanel();
-      render();
+      updateViewState();
       updateStatusBar();
       showToast(`已删除图层`);
     }
@@ -2802,7 +3356,7 @@ html_content = r"""<!DOCTYPE html>
 
       // 5. Draw Selection Handles & Safety Warning
       const layer = getSelectedLayer();
-      if (layer) {
+      if (layer && state.viewMode === 'edit') {
         drawSelectionHandles(layer);
       }
 
@@ -3220,8 +3774,8 @@ html_content = r"""<!DOCTYPE html>
       if (target === 'fit' || target === undefined) {
         state.isFitMode = true;
         const bannerExtra = isBannerShown ? Math.max(0, banner.offsetHeight + 6) : 0;
-        const availW = Math.max(100, viewport.clientWidth - 48);
-        const availH = Math.max(100, viewport.clientHeight - 48 - bannerExtra);
+        const availW = Math.max(100, viewport.clientWidth);
+        const availH = Math.max(100, viewport.clientHeight - bannerExtra);
         state.zoom = Math.min(availW / cw, availH / ch, 1.0);
         state.zoom = Math.floor(state.zoom * 1000) / 1000;
       } else {
