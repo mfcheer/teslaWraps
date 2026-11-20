@@ -1250,8 +1250,8 @@
 
     /* Empty Mode */
     .shell.empty .art {
-      width: min(64vw, 770px);
-      left: 54%;
+      width: min(58vw, 720px);
+      left: 55%;
       top: 45%;
       background: transparent;
       border: 0;
@@ -1267,6 +1267,26 @@
       mix-blend-mode: screen;
       mask-image: radial-gradient(ellipse 72% 68% at 50% 48%, #000 76%, transparent 100%);
       -webkit-mask-image: radial-gradient(ellipse 72% 68% at 50% 48%, #000 76%, transparent 100%);
+    }
+    .shell.empty .art #emptyVehicleImage.hero-vehicle {
+      max-height: none;
+      mix-blend-mode: normal;
+      mask-image: none;
+      -webkit-mask-image: none;
+      filter: drop-shadow(0 26px 38px rgba(0, 0, 0, .42));
+      animation: hero-arrive 900ms cubic-bezier(.2, .7, .2, 1) both,
+                 hero-breathe 7s ease-in-out 900ms infinite;
+    }
+    @keyframes hero-arrive {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes hero-breathe {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .shell.empty .art #emptyVehicleImage.hero-vehicle { animation: none; }
     }
     .shell.empty .art .canvas-viewport {
       display: none;
@@ -1450,6 +1470,140 @@
       .side { width: 190px; }
     }
 
+    /* A quiet first step: choose a model, then start designing. */
+    .shell.empty {
+      background: radial-gradient(ellipse 65% 75% at 67% 50%, #1b2229 0%, #10151b 58%, #0d1116 100%);
+    }
+    .shell.empty:after,
+    .shell.empty .stageinfo,
+    .shell.empty .meta,
+    .shell.empty .disclaimer,
+    .shell.empty .header-utility,
+    .shell.empty .header-export {
+      display: none !important;
+    }
+    .shell.empty .header-utility { display: none !important; }
+    .shell.empty .top {
+      background: transparent;
+      border-bottom-color: rgba(255, 255, 255, .06);
+    }
+    .shell.empty .topmid {
+      margin-left: auto;
+    }
+    .shell.empty .topmid .label,
+    .shell.empty #modelResBadge {
+      display: none;
+    }
+    .shell.empty .model-trigger-btn {
+      background: transparent;
+      border-color: rgba(255, 255, 255, .18);
+      border-radius: 10px;
+      padding: 0 14px;
+      height: 38px;
+    }
+    .shell.empty .intro {
+      left: clamp(32px, 6vw, 96px);
+      top: 31%;
+      width: min(32vw, 380px);
+    }
+    .shell.empty .intro .eyebrow,
+    .shell.empty .intro .rule,
+    .shell.empty .intro .count {
+      display: none;
+    }
+    .shell.empty .intro h1 {
+      font-size: clamp(38px, 4.2vw, 58px);
+      font-weight: 580;
+      line-height: 1.16;
+      letter-spacing: -.045em;
+      margin: 0 0 20px;
+    }
+    .shell.empty .intro p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #aeb7bf;
+      max-width: 310px;
+    }
+    .shell.empty .art {
+      left: 68%;
+      top: 51%;
+      width: min(64vw, 900px);
+      pointer-events: none;
+    }
+    .shell.empty .footer {
+      left: clamp(32px, 6vw, 96px);
+      top: calc(31% + 205px);
+      bottom: auto;
+      transform: none;
+      background: none;
+      border: 0;
+      box-shadow: none;
+      padding: 0;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .shell.empty .footer > :not(#footerEditBtn) {
+      display: none;
+    }
+    .shell.empty .footer #footerEditBtn {
+      height: 48px;
+      min-width: 160px;
+      padding: 0 24px;
+      border-radius: 8px;
+      background: #e82127;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .shell.empty .footer #footerEditBtn:hover {
+      background: #ca1e24;
+    }
+    .shell.empty .draft-restore-banner {
+      top: auto;
+      bottom: 22px;
+      left: auto;
+      right: 28px;
+      transform: none;
+      width: auto;
+      max-width: calc(100% - 56px);
+      height: 42px;
+      gap: 16px;
+      background: rgba(24, 30, 37, .92);
+      box-shadow: none;
+    }
+    .shell.empty .draft-banner-main > span:first-child,
+    .shell.empty .draft-banner-desc { display: none; }
+    .shell.empty .draft-banner-title {
+      color: #c4cbd1;
+      font-weight: 500;
+    }
+    @media (max-width: 700px) {
+      .shell.empty .top { padding: 0 20px; }
+      .shell.empty .brand { min-width: auto; }
+      .shell.empty .intro {
+        left: 24px;
+        top: 17%;
+        width: calc(100% - 48px);
+      }
+      .shell.empty .intro h1 { font-size: 38px; }
+      .shell.empty .intro p { font-size: 13px; }
+      .shell.empty .art {
+        left: 50%;
+        top: 59%;
+        width: min(95vw, 620px);
+      }
+      .shell.empty .footer {
+        left: 24px;
+        top: auto;
+        bottom: 98px;
+      }
+      .shell.empty .draft-restore-banner {
+        left: 24px;
+        right: auto;
+        bottom: 24px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1497,10 +1651,10 @@
       </optgroup>
     </select>
 
-    <div class="header-divider"></div>
+    <div class="header-divider header-utility"></div>
 
     <!-- Project Menu Trigger -->
-    <div style="position: relative;">
+    <div class="header-utility" style="position: relative;">
       <button id="btnProjectMenu" type="button" class="ghost-btn" title="工程文件操作" aria-haspopup="menu" aria-expanded="false" aria-controls="projectMenuDropdown">📁 工程 ▾</button>
       <div id="projectMenuDropdown" class="popover-menu" role="menu" aria-label="工程文件操作菜单">
         <button type="button" class="menu-item" id="menuItemOpen" role="menuitem">📂 打开工程</button>
@@ -1514,7 +1668,7 @@
     <button id="btnSaveProject" style="display: none;">💾 保存工程</button>
 
     <!-- Center Navigation: Undo/Redo & Draft Status -->
-    <div style="display: flex; align-items: center; gap: 6px;">
+    <div class="header-utility" style="display: flex; align-items: center; gap: 6px;">
       <button id="btnUndo" class="ghost-btn" disabled title="撤销 (Ctrl/Cmd+Z)">↺ 撤销</button>
       <button id="btnRedo" class="ghost-btn" disabled title="重做 (Ctrl/Cmd+Shift+Z)">↻ 重做</button>
       <div class="header-divider"></div>
@@ -1537,10 +1691,10 @@
       </div>
     </div>
 
-    <div style="flex: 1;"></div>
+    <div class="header-utility" style="flex: 1;"></div>
 
     <!-- Right Navigation: Primary Export Menu -->
-    <div style="position: relative;">
+    <div class="header-export" style="position: relative;">
       <button id="btnExportMenu" type="button" class="export-btn" title="打开车机贴图与 U 盘包导出检查面板" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportPanelModal">导出贴图　↗</button>
       <div id="exportPanelModal" class="popover-menu" role="dialog" aria-label="车身涂装导出" tabindex="-1">
         <div style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">车机贴图导出检查</div>
@@ -1584,15 +1738,15 @@
     <!-- Intro (Left) -->
     <div class="intro" id="stageIntro">
       <div class="eyebrow">YOUR CANVAS / 01</div>
-      <h1 id="headline">从一张<br>空白车身开始。</h1>
-      <p id="summary">选择图案与位置，在二维车身展开图上慢慢完成属于你的涂装。</p>
+      <h1 id="headline">设计你的<br>专属车身。</h1>
+      <p id="summary">选车型，放贴图，导出车机涂装。</p>
       <div class="rule"></div>
       <div class="count" id="introCount">MODEL Y L　/　1024 × 1024</div>
     </div>
 
     <!-- Visual Art & Real Canvas Centerpiece -->
     <div class="art" id="artContainer" aria-label="Model Y L 二维车身展开图">
-      <img id="emptyVehicleImage" src="custom-wraps/modely-l/vehicle_image.png" alt="Model Y L 车型外观参考图">
+      <img id="emptyVehicleImage" src="assets/hero-model-y-l.png" alt="Model Y L 风格化车型外观参考图">
       <div class="canvas-viewport" id="canvasViewport" tabindex="0">
         <div class="canvas-zoom-container" id="canvasZoomContainer">
           <div class="canvas-wrapper" id="canvasWrapper">
@@ -1778,7 +1932,7 @@
           <div class="section-title">导出配置</div>
           <div class="form-group">
             <span class="form-label">导出文件名 (≤ 30 字符)</span>
-            <input type="text" id="exportFileName" value="Tesla_Wrap_Custom.png" maxlength="30">
+            <input type="text" id="exportFileName" value="Marvel_YL_Custom.png" maxlength="30">
           </div>
           <div class="form-group">
             <label style="font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
@@ -1922,8 +2076,11 @@
         introCount.textContent = `${curM.name.toUpperCase()}　/　${mw} × ${mh}`;
       }
       if (emptyImg && curM.vehicleImage) {
-        emptyImg.src = curM.vehicleImage;
-        emptyImg.alt = `${curM.name} 车型外观参考图`;
+        const useNewHero = state.currentModel === 'modely-l';
+        const nextSrc = useNewHero ? 'assets/hero-model-y-l.png' : curM.vehicleImage;
+        if (emptyImg.getAttribute('src') !== nextSrc) emptyImg.src = nextSrc;
+        emptyImg.classList.toggle('hero-vehicle', useNewHero);
+        emptyImg.alt = `${curM.name} ${useNewHero ? '风格化' : ''}车型外观参考图`;
       }
       if (artContainer) {
         artContainer.setAttribute('aria-label', `${curM.name} 二维车身展开图`);
@@ -1938,11 +2095,11 @@
         if (stageDesc) stageDesc.innerHTML = '此处为贴图布局预览<br>并非实车渲染';
         if (editBtn) editBtn.textContent = '编辑定制　↗';
       } else {
-        if (headline) headline.innerHTML = '从一张<br>空白车身开始。';
-        if (summary) summary.textContent = '选择图案与位置，在二维车身展开图上慢慢完成属于你的涂装。';
+        if (headline) headline.innerHTML = '设计你的<br>专属车身。';
+        if (summary) summary.textContent = '选车型，放贴图，导出车机涂装。';
         if (stageTitle) stageTitle.textContent = '车型外观参考';
         if (stageDesc) stageDesc.innerHTML = '尚未映射贴图<br>设计以二维展开图为准';
-        if (editBtn) editBtn.textContent = '编辑定制　↗';
+        if (editBtn) editBtn.textContent = '开始设计　→';
       }
 
       const clipBtn = document.getElementById('footerClipBtn');
@@ -2517,7 +2674,7 @@
       currentModel: 'modely-l',
       bgColor: '#ffffff',
       autoClipOnExport: true,
-      exportFileName: 'Tesla_Wrap_Custom.png',
+      exportFileName: 'Marvel_YL_Custom.png',
       currentExportSize: 0,
       // Drag/Transform State
       isDragging: false,
