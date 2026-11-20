@@ -1,0 +1,3816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tesla 全车型车机皮肤可视化编辑器 (Tesla Wrap Studio)</title>
+  <link rel="icon" type="image/svg+xml" href="app-icon.svg">
+  <style>
+    :root {
+      --bg-main: #101318;
+      --bg-sidebar: #181C22;
+      --bg-canvas: #0C0F13;
+      --bg-card: #1F242C;
+      --bg-popover: #222832;
+      --bg-hover: #2A313D;
+      --border-color: #303741;
+      --border-subtle: #242A34;
+      --accent: #4389F7;
+      --accent-hover: #3476dc;
+      --accent-focus: rgba(67, 137, 247, 0.35);
+      --success: #34C98A;
+      --warning: #F4B544;
+      --danger: #F16B6B;
+      --text-main: #F2F4F7;
+      --text-sub: #A9B2BE;
+      --text-muted: #788391;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 13px;
+      line-height: 20px;
+    }
+
+    /* Top App Header (48px) */
+    .app-header {
+      height: 48px;
+      min-height: 48px;
+      max-height: 48px;
+      background: var(--bg-sidebar);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative;
+      z-index: 40;
+    }
+    .header-left, .header-center, .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 6px;
+      white-space: nowrap;
+    }
+    .brand-icon {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .header-divider {
+      width: 1px;
+      height: 18px;
+      background: var(--border-color);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    /* Buttons & Inputs */
+    button, input, select {
+      font-family: inherit;
+      font-size: 13px;
+    }
+    button {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+    button:hover:not(:disabled) {
+      background: var(--bg-hover);
+      border-color: #404856;
+    }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn-sm {
+      height: 26px;
+      padding: 2px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+    .btn-action {
+      background: #252c38;
+      border-color: #3b4554;
+      color: #60a5fa;
+    }
+    .btn-action:hover:not(:disabled) {
+      background: #2f3847;
+      border-color: #60a5fa;
+    }
+
+    /* Header Triggers */
+    .model-trigger-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0 10px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      box-sizing: border-box;
+      transition: all 120ms ease;
+    }
+    .model-trigger-btn:hover {
+      background: var(--bg-hover);
+      border-color: #404856;
+    }
+    .model-trigger-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: var(--accent);
+    }
+    .badge {
+      background: #14171d;
+      border: 1px solid var(--border-color);
+      color: var(--text-sub);
+      font-size: 11px;
+      font-weight: normal;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    /* Draft Status Badge */
+    .draft-badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-sub);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 0 10px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      outline: none;
+      box-sizing: border-box;
+      transition: all 120ms ease;
+    }
+    .draft-badge-status:hover {
+      background: var(--bg-hover);
+      border-color: #404856;
+    }
+    .draft-badge-status:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: var(--accent);
+    }
+    .draft-indicator-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+      transition: background 150ms ease;
+    }
+    .draft-indicator-dot.saving {
+      background: var(--warning);
+      animation: draftPulse 1s infinite alternate;
+    }
+    @keyframes draftPulse {
+      0% { opacity: 0.4; }
+      100% { opacity: 1; }
+    }
+
+    /* Popover Dropdown Menus */
+    .popover-menu {
+      position: absolute;
+      background: var(--bg-popover);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      z-index: 100;
+      display: none;
+      animation: popoverFadeIn 120ms ease-out;
+    }
+    @keyframes popoverFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .popover-menu.show {
+      display: block;
+    }
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      height: 36px;
+      color: var(--text-main);
+      cursor: pointer;
+      font-size: 13px;
+      width: 100%;
+      border: none;
+      background: transparent;
+      text-align: left;
+      font-family: inherit;
+      outline: none;
+      box-sizing: border-box;
+      transition: background 100ms ease;
+    }
+    .menu-item:hover {
+      background: var(--bg-hover);
+    }
+    .menu-item:focus-visible {
+      background: var(--bg-hover);
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+    .menu-divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 4px 0;
+    }
+
+    /* Model Selector Popover */
+    #modelSelectModal {
+      top: 48px;
+      left: 160px;
+      width: 440px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    .model-group-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin: 8px 0 4px 0;
+      letter-spacing: 0.5px;
+    }
+    .model-group-title:first-child {
+      margin-top: 0;
+    }
+    .model-list-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+    .model-option-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      width: 100%;
+      background: transparent;
+      text-align: left;
+      font-family: inherit;
+      color: inherit;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 120ms ease;
+    }
+    .model-option-card:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-color);
+    }
+    .model-option-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: var(--accent);
+    }
+    .model-option-card.active {
+      background: rgba(67, 137, 247, 0.15);
+      border-color: var(--accent);
+    }
+    .model-card-thumb {
+      width: 44px;
+      height: 32px;
+      border-radius: 4px;
+      background: #0f1115;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .model-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .model-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .model-card-desc {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    /* Export Panel Popover */
+    #exportPanelModal {
+      top: 48px;
+      right: 16px;
+      width: 320px;
+      padding: 14px;
+    }
+    .export-check-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 12px;
+    }
+    .export-check-item:last-child {
+      border-bottom: none;
+    }
+    .export-check-label {
+      color: var(--text-sub);
+    }
+    .export-check-val {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    /* Draft Details Popover */
+    #draftPopover {
+      top: 48px;
+      right: 120px;
+      width: 250px;
+      padding: 12px;
+    }
+
+    /* Project Menu Dropdown */
+    #projectMenuDropdown {
+      top: 48px;
+      left: 310px;
+      width: 140px;
+    }
+
+    /* Display Settings Dropdown */
+    #displaySettingsDropdown {
+      top: 84px;
+      left: 200px;
+      width: 150px;
+      padding: 8px 12px;
+    }
+
+    /* App Main Body */
+    .app-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      position: relative;
+    }
+
+    /* Sidebars */
+    .sidebar {
+      background: var(--bg-sidebar);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+      z-index: 20;
+    }
+    .left-sidebar {
+      width: 248px;
+      min-width: 248px;
+      max-width: 248px;
+      border-right: 1px solid var(--border-color);
+    }
+    .right-sidebar {
+      width: 272px;
+      min-width: 272px;
+      max-width: 272px;
+      border-left: 1px solid var(--border-color);
+    }
+
+    /* Sidebar Tabs */
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-sidebar);
+      flex-shrink: 0;
+    }
+    .sidebar-tab {
+      flex: 1;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-sub);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .sidebar-tab:hover {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+    }
+    .sidebar-tab.active {
+      color: var(--text-main);
+      font-weight: 600;
+      border-bottom-color: var(--accent);
+      background: rgba(67, 137, 247, 0.04);
+    }
+    .tab-badge {
+      font-size: 11px;
+      font-weight: normal;
+      background: #252b36;
+      color: var(--text-sub);
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+    .tab-badge.warn {
+      background: rgba(244, 181, 68, 0.2);
+      color: var(--warning);
+    }
+
+    /* Sidebar Panes */
+    .sidebar-pane {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 14px;
+      gap: 14px;
+    }
+    .sidebar-pane.active {
+      display: flex;
+    }
+    .panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      letter-spacing: 0.2px;
+    }
+
+    /* Upload Box */
+    .upload-box {
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 12px 10px;
+      text-align: center;
+      background: rgba(31, 36, 44, 0.5);
+      cursor: pointer;
+      outline: none;
+      transition: all 140ms ease;
+    }
+    .upload-box:hover, .upload-box.dragover {
+      border-color: var(--accent);
+      background: rgba(67, 137, 247, 0.08);
+    }
+    .upload-box:focus-visible {
+      border-color: var(--accent);
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    .upload-box p {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* Preset Grid */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .preset-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-align: center;
+      cursor: pointer;
+      font-family: inherit;
+      width: 100%;
+      min-width: 0;
+      height: auto;
+      min-height: 84px;
+      color: inherit;
+      box-sizing: border-box;
+      outline: none;
+      white-space: normal;
+      overflow: visible;
+      transition: all 120ms ease;
+    }
+    .preset-card:hover {
+      border-color: var(--accent);
+      background: var(--bg-hover);
+      transform: translateY(-1px);
+    }
+    .preset-card:focus-visible {
+      border-color: var(--accent);
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    .preset-card img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      margin-bottom: 3px;
+      flex-shrink: 0;
+      pointer-events: none;
+    }
+    .preset-card .preset-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-main);
+      line-height: 1.25;
+      width: 100%;
+      word-break: break-word;
+      white-space: normal;
+      display: block;
+      margin: 0;
+      pointer-events: none;
+    }
+    .preset-card .preset-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.2;
+      width: 100%;
+      white-space: normal;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* Layer List */
+    .layer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+    .layer-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 100ms ease;
+    }
+    .layer-item:hover {
+      background: var(--bg-hover);
+      border-color: #404856;
+    }
+    .layer-item.active {
+      border-color: var(--accent);
+      background: rgba(67, 137, 247, 0.12);
+    }
+    .layer-thumb {
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      object-fit: contain;
+      background: #0c0f13;
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .layer-name {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .layer-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .layer-btn {
+      width: 22px;
+      height: 22px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0;
+    }
+    .layer-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+    .layer-btn.active-flag {
+      color: var(--warning);
+    }
+
+    /* Center Stage */
+    .stage-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-canvas);
+      position: relative;
+      overflow: hidden;
+    }
+    .stage-toolbar {
+      height: 36px;
+      min-height: 36px;
+      max-height: 36px;
+      padding: 0 12px;
+      background: rgba(24, 28, 34, 0.9);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .stage-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stage-toolbar label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--text-sub);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .stage-toolbar label:hover {
+      color: var(--text-main);
+    }
+    .stage-toolbar label input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    /* Canvas Viewport */
+    .canvas-viewport {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+    }
+    .canvas-viewport.grab {
+      cursor: grab !important;
+    }
+    .canvas-viewport.grabbing {
+      cursor: grabbing !important;
+    }
+    .canvas-zoom-container {
+      position: relative;
+      transition: margin 150ms ease;
+      flex-shrink: 0;
+    }
+    .canvas-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+    #mainCanvas {
+      display: block;
+      cursor: default;
+    }
+
+    /* Floating Banners */
+    .draft-restore-banner {
+      position: absolute;
+      top: 44px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 636px;
+      max-width: 92%;
+      height: 36px;
+      background: rgba(34, 40, 50, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      z-index: 20;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+    .draft-banner-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .draft-banner-title {
+      font-weight: 600;
+      color: #fbbf24;
+    }
+    .draft-banner-desc {
+      color: var(--text-sub);
+    }
+    .draft-banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .clip-notice {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      color: var(--text-sub);
+      background: rgba(34, 40, 50, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 4px 12px;
+      z-index: 15;
+      pointer-events: none;
+      display: none;
+      white-space: nowrap;
+    }
+
+    /* Forms & Inputs in Properties/Inspect */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-label {
+      font-size: 12px;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .form-row {
+      display: flex;
+      gap: 8px;
+    }
+    .form-row .form-group {
+      flex: 1;
+    }
+    input[type="text"], input[type="number"] {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 5px 8px;
+      border-radius: 6px;
+      height: 32px;
+    }
+    input[type="range"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+      width: 100%;
+    }
+    .color-picker-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    input[type="color"] {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    /* Info Alert Badges */
+    .info-alert {
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .info-alert.locked {
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fbbf24;
+    }
+    .info-alert.overflow {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    /* Compliance & Vehicle Cards */
+    .vehicle-card {
+      display: flex;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 10px;
+      align-items: center;
+    }
+    .vehicle-card-img-wrap {
+      width: 52px;
+      height: 38px;
+      flex-shrink: 0;
+      background: #0f1115;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 1px solid #232832;
+    }
+    .vehicle-card-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .vehicle-card-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .vehicle-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .vehicle-card-sub {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+    .tag {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .tag-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+    }
+    .tag-warn {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
+
+    .compliance-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .compliance-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .compliance-item span:first-child {
+      color: var(--text-sub);
+    }
+    .compliance-item .ok {
+      color: var(--success);
+      font-weight: 500;
+    }
+    .compliance-item .warn {
+      color: var(--warning);
+      font-weight: 500;
+    }
+    .compliance-item .err {
+      color: var(--danger);
+      font-weight: 500;
+    }
+    .disclaimer-box {
+      background: rgba(31, 36, 44, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11px;
+      line-height: 16px;
+      color: var(--text-muted);
+    }
+
+    /* Bottom Status Footer (24px) */
+    .app-footer {
+      height: 24px;
+      min-height: 24px;
+      max-height: 24px;
+      background: #0c0f13;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      z-index: 30;
+    }
+    .footer-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .footer-divider {
+      width: 1px;
+      height: 10px;
+      background: var(--border-subtle);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 34px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #252b36;
+      border: 1px solid #374151;
+      color: var(--text-main);
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 180ms ease;
+      z-index: 200;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation (48px) -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-title">
+        <img class="brand-icon" src="app-icon.svg" alt="" aria-hidden="true">
+        <span>Tesla Wrap Studio</span>
+      </div>
+
+      <!-- Vehicle Model Selector Trigger -->
+      <button type="button" class="model-trigger-btn" id="btnModelTrigger" aria-haspopup="dialog" aria-expanded="false" aria-controls="modelSelectModal" title="切换特斯拉官方车型模板">
+        <span id="modelBtnLabel">🚘 Model Y L</span>
+        <span id="modelResBadge" class="badge">1024×1024</span>
+        <span style="font-size: 10px; color: var(--text-muted);">▾</span>
+      </button>
+
+      <!-- Hidden standard select element for automation and programmatic compatibility -->
+      <select id="modelSelect" style="display: none;">
+        <optgroup label="Model Y 系列">
+          <option value="modely-l" selected>Model Y L</option>
+          <option value="modely">Model Y (经典版)</option>
+          <option value="modely-2025-base">Model Y 焕新版 (标准版)</option>
+          <option value="modely-2025-premium">Model Y 焕新版 (长续航版)</option>
+          <option value="modely-2025-performance">Model Y 焕新版 (高性能版)</option>
+        </optgroup>
+        <optgroup label="Model 3 系列">
+          <option value="model3">Model 3 (经典版)</option>
+          <option value="model3-2024-base">Model 3 焕新版 (标准/长续航)</option>
+          <option value="model3-2024-performance">Model 3 焕新版 (高性能版)</option>
+        </optgroup>
+        <optgroup label="Cybertruck 赛博皮卡">
+          <option value="cybertruck">Cybertruck (赛博皮卡)</option>
+        </optgroup>
+        <optgroup label="Model S 系列">
+          <option value="models-2021">Model S (2021+)</option>
+          <option value="models-2025-plaid">Model S Plaid (2025+)</option>
+        </optgroup>
+        <optgroup label="Model X 系列">
+          <option value="modelx-2021">Model X (2021+)</option>
+        </optgroup>
+      </select>
+
+      <div class="header-divider"></div>
+
+      <!-- Project Menu Trigger -->
+      <div style="position: relative;">
+        <button id="btnProjectMenu" type="button" title="工程文件操作" aria-haspopup="menu" aria-expanded="false" aria-controls="projectMenuDropdown">📁 工程 ▾</button>
+        <div id="projectMenuDropdown" class="popover-menu" role="menu" aria-label="工程文件操作菜单">
+          <button type="button" class="menu-item" id="menuItemOpen" role="menuitem">📂 打开工程</button>
+          <button type="button" class="menu-item" id="menuItemSave" role="menuitem">💾 保存工程</button>
+        </div>
+      </div>
+
+      <!-- Project File Input & Direct Buttons for programmatic compatibility -->
+      <input type="file" id="projectFileInput" accept=".json" style="display: none;">
+      <button id="btnOpenProject" style="display: none;">📂 打开工程</button>
+      <button id="btnSaveProject" style="display: none;">💾 保存工程</button>
+    </div>
+
+    <!-- Center Navigation: Undo/Redo & Draft Status -->
+    <div class="header-center">
+      <button id="btnUndo" disabled title="撤销 (Ctrl/Cmd+Z)">↺ 撤销</button>
+      <button id="btnRedo" disabled title="重做 (Ctrl/Cmd+Shift+Z)">↻ 重做</button>
+      <div class="header-divider"></div>
+
+      <!-- Draft Status Badge & Popover -->
+      <div style="position: relative;">
+        <button type="button" class="draft-badge-status" id="draftStatusBadge" title="本地草稿自动实时暂存" aria-haspopup="dialog" aria-expanded="false" aria-controls="draftPopover">
+          <span class="draft-indicator-dot" id="draftDot"></span>
+          <span id="draftStatusText">草稿已就绪</span>
+        </button>
+        <div id="draftPopover" class="popover-menu" role="dialog" aria-label="本地草稿状态管理" tabindex="-1">
+          <div style="padding: 6px 12px; font-size: 11px; color: var(--text-sub); border-bottom: 1px solid var(--border-subtle);" id="draftPopoverInfo">
+            本地草稿自动实时暂存中
+          </div>
+          <div style="display: flex; gap: 6px; padding: 8px 12px;">
+            <button id="btnRestoreDraftManual" class="btn-sm" style="display: none; flex: 1;" title="恢复已暂存的本地草稿">📋 恢复</button>
+            <button id="btnClearDraft" class="btn-sm" style="display: none; flex: 1; color: var(--text-sub);" title="清空本地暂存草稿">清空</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Navigation: Primary Export Menu -->
+    <div class="header-right">
+      <div style="position: relative;">
+        <button id="btnExportMenu" type="button" class="btn-primary" title="打开车机贴图与 U 盘包导出检查面板" aria-haspopup="dialog" aria-expanded="false" aria-controls="exportPanelModal">⬇️ 导出 ▾</button>
+        <div id="exportPanelModal" class="popover-menu" role="dialog" aria-label="车身涂装导出" tabindex="-1">
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-main); margin-bottom: 8px;">车机贴图导出检查</div>
+          <div class="export-check-item">
+            <span class="export-check-label">适配车型</span>
+            <span class="export-check-val" id="expCheckModel">Model Y L</span>
+          </div>
+          <div class="export-check-item">
+            <span class="export-check-label">导出尺寸</span>
+            <span class="export-check-val" id="expCheckRes">1024 × 1024</span>
+          </div>
+          <div class="export-check-item">
+            <span class="export-check-label">白区裁切</span>
+            <span class="export-check-val" id="expCheckClip">已启用 (仅涂装区)</span>
+          </div>
+          <div class="export-check-item">
+            <span class="export-check-label">越界状态</span>
+            <span class="export-check-val" id="expCheckOverflow">0 越界</span>
+          </div>
+          <div class="export-check-item">
+            <span class="export-check-label">预估体积</span>
+            <span class="export-check-val ok" id="expCheckSize">计算中...</span>
+          </div>
+          <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+            <button id="btnExportPNG" class="btn-primary" style="width: 100%;" title="导出车规 PNG 贴图">⬇️ 导出车机贴图 (PNG)</button>
+            <button id="btnExportZip" class="btn-action" style="width: 100%;" title="生成标准 U 盘目录 Wraps/ 压缩包">📦 下载 U盘包 (ZIP)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Model Selector Popover Modal (Positioned below Model Trigger) -->
+  <div id="modelSelectModal" class="popover-menu" role="dialog" aria-label="选择特斯拉车型模板" tabindex="-1">
+    <div id="modelListContainer" role="listbox" aria-label="特斯拉车型模板列表">
+      <!-- Populated dynamically by JS -->
+    </div>
+  </div>
+
+  <!-- App Main Body (248px Left + Flexible Canvas Stage + 272px Right) -->
+  <div class="app-body">
+    <!-- Left Sidebar: Material & Layers (248px) -->
+    <aside class="sidebar left-sidebar">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" id="tabBtnMaterial" onclick="switchLeftTab('material')">素材</button>
+        <button class="sidebar-tab" id="tabBtnLayers" onclick="switchLeftTab('layers')">
+          图层 <span id="layerCountText" class="tab-badge">0</span>
+        </button>
+      </div>
+
+      <!-- Pane 1: Material (Upload & Presets) -->
+      <div class="sidebar-pane active" id="paneMaterial">
+        <div class="panel-section">
+          <div class="section-title">本地素材上传</div>
+          <div class="upload-box" id="dropZone" role="button" tabindex="0" aria-label="点击或拖拽图片上传">
+            <input type="file" id="fileInput" accept="image/png,image/jpeg" multiple style="display: none;">
+            <div style="font-size: 22px; margin-bottom: 2px;">📥</div>
+            <div style="font-size: 12px; font-weight: 500;">点击或拖拽图片上传</div>
+            <p>支持透明/白底 PNG 与 JPG</p>
+          </div>
+        </div>
+
+        <div class="panel-section" style="flex: 1;">
+          <div class="section-title">
+            <span>自定义素材库</span>
+            <span style="font-size: 11px; color: var(--text-muted);">上传图片开始创作</span>
+          </div>
+          <div class="preset-grid" id="presetContainer">
+            <!-- Populated dynamically by JS (2-column layout) -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 2: Layers List -->
+      <div class="sidebar-pane" id="paneLayers">
+        <div class="panel-section" style="flex: 1; display: flex; flex-direction: column;">
+          <div class="section-title">
+            <span>图层层级</span>
+            <span style="font-size: 11px; color: var(--text-muted);">顶部图层优先渲染</span>
+          </div>
+          <div class="layer-list" id="layerList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Stage: Canvas Viewport -->
+    <main class="stage-container">
+      <!-- Stage Toolbar (36px) -->
+      <div class="stage-toolbar">
+        <div class="stage-toolbar-group">
+          <button id="btnZoomFit" class="btn-sm" title="自适应居中完整视野">适应视野</button>
+          <button id="btnZoom100" class="btn-sm" title="按 100% 原始像素查看">100%</button>
+          <span id="zoomLevelLabel" style="font-size: 11px; color: var(--text-sub); min-width: 34px; text-align: center; white-space: nowrap;">100%</span>
+          <div style="width: 1px; height: 14px; background: var(--border-color); margin: 0 4px; flex-shrink: 0;"></div>
+          <label title="开启后，实时以蒙版裁切显示最终导出真实效果" id="lblClipPreview">
+            <input type="checkbox" id="chkClipPreview"> 裁切预览
+          </label>
+          <div style="position: relative;">
+            <button id="btnDisplaySettings" type="button" class="btn-sm" title="官方轮廓线与越界告警框设置" aria-haspopup="dialog" aria-expanded="false" aria-controls="displaySettingsDropdown">显示设置 ▾</button>
+            <div id="displaySettingsDropdown" class="popover-menu" role="dialog" aria-label="视图与显示设置" tabindex="-1">
+              <label style="padding: 4px 0;"><input type="checkbox" id="chkShowTemplate" checked> 官方轮廓</label>
+              <label style="padding: 4px 0;"><input type="checkbox" id="chkSafetyAlert" checked> 越界告警</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-toolbar-group">
+          <span style="font-size: 11px; color: var(--text-muted);">按住空格可拖拽平移 · 滚轮缩放</span>
+        </div>
+      </div>
+
+      <!-- Non-intrusive Floating Draft Restore Banner -->
+      <div id="draftRestoreBanner" class="draft-restore-banner" style="display: none;">
+        <div class="draft-banner-main">
+          <span style="font-size: 14px;">💡</span>
+          <span class="draft-banner-title">检测到未完成本地草稿</span>
+          <span class="draft-banner-desc" id="draftBannerDesc">车型：Model Y L · 2 个图层 · 暂存时间：16:20</span>
+        </div>
+        <div class="draft-banner-actions">
+          <button id="btnRestoreDraft" class="btn-sm btn-primary">✨ 恢复草稿</button>
+          <button id="btnDiscardDraft" class="btn-sm" title="忽略本次提示">✕ 忽略</button>
+        </div>
+      </div>
+
+      <!-- Subtle Clip Mode Notice -->
+      <div class="clip-notice" id="clipNotice">
+        ℹ️ 裁切预览已开启：仅显示可喷涂车漆区域，天幕/车窗/缝隙等非漆面内容已自动裁切隐藏。在此模式下仍可自由选中拖拽。
+      </div>
+
+      <!-- Canvas Viewport -->
+      <div class="canvas-viewport" id="canvasViewport" tabindex="0">
+        <div class="canvas-zoom-container" id="canvasZoomContainer">
+          <div class="canvas-wrapper" id="canvasWrapper">
+            <canvas id="mainCanvas" width="1024" height="1024"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Sidebar: Properties & Inspection (272px) -->
+    <aside class="sidebar right-sidebar">
+      <div class="sidebar-tabs">
+        <button class="sidebar-tab active" id="tabBtnProps" onclick="switchRightTab('props')">属性</button>
+        <button class="sidebar-tab" id="tabBtnInspect" onclick="switchRightTab('inspect')">
+          检查 <span id="tabInspectBadge" class="tab-badge">0 越界</span>
+        </button>
+      </div>
+
+      <!-- Pane 1: Layer Properties -->
+      <div class="sidebar-pane active" id="paneProps">
+        <div class="panel-section" id="selectionPropsPanel">
+          <div class="section-title">图层精确调整</div>
+
+          <div id="noSelectionMsg" style="font-size: 12px; color: var(--text-sub); text-align: center; padding: 28px 8px; line-height: 20px;">
+            <div style="font-size: 24px; margin-bottom: 6px;">👆</div>
+            在画布或图层列表中选择一个素材进行精确调整<br>
+            <span style="font-size: 11px; color: var(--text-muted);">支持直接拖拽、手柄缩放、旋转与快捷键</span>
+          </div>
+
+          <div id="selectionPropsForm" style="display: none; flex-direction: column; gap: 10px;">
+            <div id="lockedNotice" class="info-alert locked" style="display: none;">
+              🔒 图层已锁定，请在图层列表解锁后再编辑
+            </div>
+            <div id="overflowNotice" class="info-alert overflow" style="display: none;">
+              ⚠️ 部分内容超出车漆区域（裁切模式下超出部分将不显示）
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <span class="form-label">X 坐标 (px)</span>
+                <input type="number" id="propX">
+              </div>
+              <div class="form-group">
+                <span class="form-label">Y 坐标 (px)</span>
+                <input type="number" id="propY">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <span class="form-label">宽度 (px)</span>
+                <input type="number" id="propW" min="10" max="2048">
+              </div>
+              <div class="form-group">
+                <span class="form-label">高度 (px)</span>
+                <input type="number" id="propH" min="10" max="2048">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">
+                <span>旋转角度</span>
+                <span id="propRotValue">0°</span>
+              </div>
+              <input type="range" id="propRotation" min="-180" max="180" value="0">
+            </div>
+
+            <div class="form-group">
+              <div class="form-label">
+                <span>不透明度</span>
+                <span id="propOpacityValue">100%</span>
+              </div>
+              <input type="range" id="propOpacity" min="0" max="100" value="100">
+            </div>
+
+            <div class="form-row" style="margin-top: 6px;">
+              <button id="btnFlipH" style="width: 100%; justify-content: center;">⇄ 水平翻转</button>
+              <button id="btnFlipV" style="width: 100%; justify-content: center;">⇅ 垂直翻转</button>
+            </div>
+
+            <div class="form-row" style="margin-top: 2px;">
+              <button id="btnDuplicateLayer" style="width: 100%; justify-content: center;">📑 复制图层</button>
+              <button id="btnDeleteLayer" style="width: 100%; justify-content: center; color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">🗑️ 删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 2: Inspection & Vehicle Specs -->
+      <div class="sidebar-pane" id="paneInspect">
+        <!-- Vehicle Card -->
+        <div class="panel-section">
+          <div class="section-title">
+            <span>当前车型</span>
+            <span id="vehicleSeriesTag" class="tag tag-success">Model Y</span>
+          </div>
+          <div class="vehicle-card" id="vehicleCard">
+            <div class="vehicle-card-img-wrap">
+              <img id="vehicleThumbImg" src="" alt="Vehicle Preview">
+            </div>
+            <div class="vehicle-card-details">
+              <div id="vehicleNameDisplay" class="vehicle-card-title">Model Y L</div>
+              <div id="vehicleSpecDisplay" class="vehicle-card-sub">官方模板 · 1024×1024</div>
+              <div class="vehicle-card-tags" style="margin-top: 2px;">
+                <span id="vehiclePaintAreaTag" class="tag tag-success">官方板件就绪</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Base Paint -->
+        <div class="panel-section">
+          <div class="section-title">底漆与背景</div>
+          <div class="form-group">
+            <div class="form-label">
+              <span>车身底色</span>
+              <label style="font-size: 11px; cursor: pointer;">
+                <input type="checkbox" id="chkEnableBg" checked> 启用底漆
+              </label>
+            </div>
+            <div class="color-picker-row">
+              <input type="color" id="bgColorPicker" value="#ffffff">
+              <input type="text" id="bgColorText" value="#ffffff" style="flex: 1;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Export Settings -->
+        <div class="panel-section">
+          <div class="section-title">导出配置</div>
+          <div class="form-group">
+            <span class="form-label">导出文件名 (≤ 30 字符)</span>
+            <input type="text" id="exportFileName" value="Tesla_Wrap_Custom.png" maxlength="30">
+          </div>
+          <div class="form-group">
+            <label style="font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="chkAutoClipOnExport" checked>
+              <span>导出时自动裁切至车漆可涂白区</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Vehicle Compliance Checklist -->
+        <div class="panel-section">
+          <div class="section-title">车规限制与校验</div>
+          <div class="compliance-card">
+            <div class="compliance-item">
+              <span>分辨率规格:</span>
+              <span class="ok" id="ruleRes">1024 × 1024 (合规)</span>
+            </div>
+            <div class="compliance-item">
+              <span>格式限制:</span>
+              <span class="ok" id="ruleFormat">PNG 32位 RGBA</span>
+            </div>
+            <div class="compliance-item">
+              <span>文件名规范:</span>
+              <span class="ok" id="ruleName">合规 (19 字符)</span>
+            </div>
+            <div class="compliance-item">
+              <span>导出实际体积:</span>
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span class="ok" id="ruleSize">计算中...</span>
+                <button id="btnRecalcSize" type="button" class="btn-sm" style="padding: 1px 6px; font-size: 10px;">刷新</button>
+              </div>
+            </div>
+            <div class="compliance-item">
+              <span>白区溢出告警:</span>
+              <span class="ok" id="ruleOverflow">0 溢出</span>
+            </div>
+          </div>
+
+          <div class="disclaimer-box">
+            ⚠️ <strong>声明与提示</strong>：<br>
+            1. 页面预览为二维展开布局示意，不能代替实车车机 3D 曲面与接缝渲染实测。<br>
+            2. 导出时若勾选自动裁切，非喷涂区（大灯、玻璃天幕、门缝）像素会被严格清零。
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Bottom Status Footer (24px) -->
+  <footer class="app-footer">
+    <div class="footer-section">
+      <span id="statusModel">Model Y L (Model Y)</span>
+      <div class="footer-divider"></div>
+      <span id="statusDimensions">1024 × 1024 px</span>
+    </div>
+    <div class="footer-section">
+      <span id="statusSelectedLayer">未选中图层</span>
+      <div class="footer-divider"></div>
+      <span id="statusOverflow">0 越界</span>
+    </div>
+    <div class="footer-section">
+      <span id="statusZoom">100%</span>
+      <div class="footer-divider"></div>
+      <span style="color: var(--text-muted);">空格拖拽平移 · 滚轮以指针缩放</span>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast">提示信息</div>
+
+  <!-- Scripts -->
+  <script src="presets.js"></script>
+  <script>
+    let isSystemInitializing = true;
+    let autoSaveTimer = null;
+    let draftSaveSeq = 0;
+
+    function hideDraftRestoreBanner() {
+      const banner = document.getElementById('draftRestoreBanner');
+      if (banner && banner.style.display !== 'none') {
+        banner.style.display = 'none';
+        if (state.isFitMode) adjustZoom('fit');
+      }
+    }
+
+    // --- Tab Switching Handlers ---
+    function switchLeftTab(tabName) {
+      document.getElementById('tabBtnMaterial').classList.toggle('active', tabName === 'material');
+      document.getElementById('tabBtnLayers').classList.toggle('active', tabName === 'layers');
+      document.getElementById('paneMaterial').classList.toggle('active', tabName === 'material');
+      document.getElementById('paneLayers').classList.toggle('active', tabName === 'layers');
+    }
+    window.switchLeftTab = switchLeftTab;
+
+    function switchRightTab(tabName) {
+      document.getElementById('tabBtnProps').classList.toggle('active', tabName === 'props');
+      document.getElementById('tabBtnInspect').classList.toggle('active', tabName === 'inspect');
+      document.getElementById('paneProps').classList.toggle('active', tabName === 'props');
+      document.getElementById('paneInspect').classList.toggle('active', tabName === 'inspect');
+    }
+    window.switchRightTab = switchRightTab;
+
+    // --- Popovers & Menus Management ---
+    let activePopoverTrigger = null;
+
+    function closeAllPopovers(restoreFocus = false) {
+      document.querySelectorAll('.popover-menu').forEach(el => el.classList.remove('show'));
+      document.querySelectorAll('[aria-expanded="true"]').forEach(el => {
+        el.setAttribute('aria-expanded', 'false');
+      });
+      if (restoreFocus && activePopoverTrigger) {
+        try { activePopoverTrigger.focus(); } catch (err) {}
+      }
+      activePopoverTrigger = null;
+    }
+
+    function togglePopover(popoverId, e, triggerEl) {
+      if (e) e.stopPropagation();
+      const target = document.getElementById(popoverId);
+      if (!target) return;
+      const isShown = target.classList.contains('show');
+      const trigger = triggerEl || (e && (e.currentTarget || (e.target && e.target.closest && e.target.closest('button, [role="button"], .model-trigger-btn, .draft-badge-status')))) || null;
+
+      closeAllPopovers(false);
+
+      if (!isShown) {
+        target.classList.add('show');
+        if (trigger) {
+          activePopoverTrigger = trigger;
+          activePopoverTrigger.setAttribute('aria-expanded', 'true');
+        }
+        const focusable = target.querySelector('button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])');
+        if (focusable) {
+          setTimeout(() => focusable.focus(), 30);
+        } else if (target.hasAttribute('tabindex')) {
+          target.focus();
+        }
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.popover-menu') &&
+          !e.target.closest('#btnModelTrigger') &&
+          !e.target.closest('#btnProjectMenu') &&
+          !e.target.closest('#draftStatusBadge') &&
+          !e.target.closest('#btnExportMenu') &&
+          !e.target.closest('#btnDisplaySettings')) {
+        closeAllPopovers(false);
+      }
+    });
+
+    // --- IndexedDB & LocalStorage Local Auto-Save Draft Storage ---
+    const DB_NAME = 'TeslaWrapStudioDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'drafts';
+    const DRAFT_KEY = 'latest_draft';
+    const LS_DRAFT_KEY = 'tesla_wrap_studio_draft';
+    const LS_CLEAR_KEY = 'tesla_wrap_studio_draft_cleared_at';
+
+    let lastClearedTimestamp = 0;
+    let isClearing = false;
+
+    function openDraftDB() {
+      return new Promise((resolve) => {
+        if (!window.indexedDB) {
+          resolve(null);
+          return;
+        }
+        try {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME);
+            }
+          };
+          req.onsuccess = (e) => resolve(e.target.result);
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function saveDraftToStorage(draftData) {
+      if (!draftData) return false;
+      if (isClearing || (draftData.timestamp && draftData.timestamp <= lastClearedTimestamp)) {
+        return false;
+      }
+
+      let idbSuccess = false;
+      try {
+        const openDbFn = (typeof window !== 'undefined' && window.openDraftDB) ? window.openDraftDB : openDraftDB;
+        const db = await openDbFn();
+        if (db && typeof db.transaction === 'function') {
+          idbSuccess = await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE_NAME, 'readwrite');
+              const store = tx.objectStore(STORE_NAME);
+              store.put(draftData, DRAFT_KEY);
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = () => resolve(false);
+              tx.onabort = () => resolve(false);
+            } catch (err) {
+              resolve(false);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('IndexedDB save error:', e);
+        idbSuccess = false;
+      }
+
+      if (isClearing || (draftData.timestamp && draftData.timestamp <= lastClearedTimestamp)) {
+        return false;
+      }
+
+      if (idbSuccess) {
+        try {
+          localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(draftData));
+        } catch (e) {}
+        return true;
+      }
+
+      try {
+        localStorage.setItem(LS_DRAFT_KEY, JSON.stringify(draftData));
+        return true;
+      } catch (e) {
+        console.warn('LocalStorage fallback save error:', e);
+        return false;
+      }
+    }
+
+    async function loadDraftFromStorage() {
+      let clearedAt = 0;
+      try {
+        const cStr = localStorage.getItem(LS_CLEAR_KEY);
+        if (cStr) clearedAt = parseInt(cStr, 10) || 0;
+      } catch (e) {}
+      if (lastClearedTimestamp > clearedAt) clearedAt = lastClearedTimestamp;
+
+      let idbDraft = null;
+      try {
+        const openDbFn = (typeof window !== 'undefined' && window.openDraftDB) ? window.openDraftDB : openDraftDB;
+        const db = await openDbFn();
+        if (db && typeof db.transaction === 'function') {
+          idbDraft = await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE_NAME, 'readonly');
+              const store = tx.objectStore(STORE_NAME);
+              const req = store.get(DRAFT_KEY);
+              req.onsuccess = () => resolve(req.result || null);
+              req.onerror = () => resolve(null);
+              req.onabort = () => resolve(null);
+            } catch (err) {
+              resolve(null);
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('IndexedDB load error:', e);
+        idbDraft = null;
+      }
+
+      let lsDraft = null;
+      try {
+        const str = localStorage.getItem(LS_DRAFT_KEY);
+        if (str) lsDraft = JSON.parse(str);
+      } catch (e) {
+        lsDraft = null;
+      }
+
+      if (idbDraft && idbDraft.timestamp && idbDraft.timestamp <= clearedAt) {
+        idbDraft = null;
+      }
+      if (lsDraft && lsDraft.timestamp && lsDraft.timestamp <= clearedAt) {
+        lsDraft = null;
+      }
+
+      if (idbDraft && lsDraft) {
+        const idbTime = idbDraft.timestamp || 0;
+        const lsTime = lsDraft.timestamp || 0;
+        return (lsTime > idbTime) ? lsDraft : idbDraft;
+      }
+
+      const result = idbDraft || lsDraft || null;
+      if (!idbDraft && lsDraft) {
+        try {
+          const openDbFn = (typeof window !== 'undefined' && window.openDraftDB) ? window.openDraftDB : openDraftDB;
+          const db = await openDbFn();
+          if (db && typeof db.transaction === 'function') {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            tx.objectStore(STORE_NAME).put(lsDraft, DRAFT_KEY);
+          }
+        } catch (e) {}
+      }
+      return result;
+    }
+
+    async function clearDraftStorage() {
+      isClearing = true;
+      if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = null;
+      }
+      draftSaveSeq++;
+      const clearTime = Date.now();
+
+      let lsDeleteSuccess = true;
+      let lsShieldSuccess = false;
+      try {
+        localStorage.setItem(LS_CLEAR_KEY, String(clearTime));
+        lsShieldSuccess = true;
+        lastClearedTimestamp = clearTime;
+      } catch (e) {
+        lsDeleteSuccess = false;
+      }
+
+      try {
+        localStorage.removeItem(LS_DRAFT_KEY);
+      } catch (e) {
+        lsDeleteSuccess = false;
+      }
+
+      let idbDeleteSuccess = true;
+      try {
+        const openDbFn = (typeof window !== 'undefined' && window.openDraftDB) ? window.openDraftDB : openDraftDB;
+        const db = await openDbFn();
+        if (db && typeof db.transaction === 'function') {
+          idbDeleteSuccess = await new Promise((resolve) => {
+            try {
+              const tx = db.transaction(STORE_NAME, 'readwrite');
+              const store = tx.objectStore(STORE_NAME);
+              store.delete(DRAFT_KEY);
+              tx.oncomplete = () => resolve(true);
+              tx.onerror = () => resolve(false);
+              tx.onabort = () => resolve(false);
+            } catch (e) {
+              resolve(false);
+            }
+          });
+        } else {
+          idbDeleteSuccess = false;
+        }
+      } catch (e) {
+        idbDeleteSuccess = false;
+      } finally {
+        isClearing = false;
+      }
+
+      const isFullSuccess = idbDeleteSuccess && lsDeleteSuccess;
+      let mode = 'failed';
+      if (isFullSuccess) {
+        mode = 'full';
+      } else if (lsShieldSuccess || idbDeleteSuccess) {
+        mode = 'shielded';
+      } else {
+        mode = 'failed';
+      }
+
+      const result = {
+        success: isFullSuccess,
+        mode: mode,
+        idbSuccess: idbDeleteSuccess,
+        lsSuccess: lsDeleteSuccess,
+        lsShielded: lsShieldSuccess
+      };
+      clearDraftStorage.lastResult = result;
+      if (typeof window !== 'undefined') {
+        window.lastDraftClearResult = result;
+      }
+
+      return isFullSuccess;
+    }
+
+    async function clearCurrentDraft() {
+      if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = null;
+      }
+      draftSaveSeq++;
+
+      const success = await clearDraftStorage();
+      const clearResult = (clearDraftStorage && clearDraftStorage.lastResult) ? clearDraftStorage.lastResult : {
+        success: success,
+        mode: success ? 'full' : 'failed',
+        idbSuccess: success,
+        lsSuccess: success,
+        lsShielded: false
+      };
+
+      clearCurrentDraft.lastResult = clearResult;
+      if (typeof window !== 'undefined') {
+        window.lastDraftClearResult = clearResult;
+      }
+
+      const text = document.getElementById('draftStatusText');
+      const dot = document.getElementById('draftDot');
+      const badge = document.getElementById('draftStatusBadge');
+      const btnClear = document.getElementById('btnClearDraft');
+      const btnRestore = document.getElementById('btnRestoreDraftManual');
+
+      if (dot) dot.classList.remove('saving');
+
+      if (clearResult.mode === 'full') {
+        hideDraftRestoreBanner();
+        if (text) text.innerText = '草稿已清空';
+        if (dot) dot.style.background = '#9ca3af';
+        if (badge) badge.title = '本地草稿已彻底清空';
+        if (btnClear) {
+          btnClear.style.display = 'none';
+          btnClear.innerText = '清空';
+          btnClear.title = '清空本地暂存草稿';
+        }
+        if (btnRestore) btnRestore.style.display = 'none';
+      } else if (clearResult.mode === 'shielded') {
+        hideDraftRestoreBanner();
+        if (text) text.innerText = '仅屏蔽旧稿';
+        if (dot) dot.style.background = '#f59e0b';
+        if (badge) badge.title = '数据库删除未完成，仅在本地屏蔽旧稿，可点击重试彻底清空';
+        if (btnClear) {
+          btnClear.style.display = 'inline-block';
+          btnClear.innerText = '重试清空';
+          btnClear.title = '重试彻底清空草稿';
+        }
+        if (btnRestore) btnRestore.style.display = 'none';
+      } else {
+        if (text) text.innerText = '清空失败';
+        if (dot) dot.style.background = '#ef4444';
+        if (badge) badge.title = '本地草稿清空失败（存储异常），可点击重试';
+        if (btnClear) {
+          btnClear.style.display = 'inline-block';
+          btnClear.innerText = '重试清空';
+          btnClear.title = '重试清空本地草稿';
+        }
+      }
+
+      return success;
+    }
+
+    function triggerAutoSave() {
+      if (isSystemInitializing || isClearing) return Promise.resolve(false);
+      draftSaveSeq++;
+      const currentSeq = draftSaveSeq;
+
+      const dot = document.getElementById('draftDot');
+      const text = document.getElementById('draftStatusText');
+      if (dot) {
+        dot.style.background = '#f59e0b';
+        dot.classList.add('saving');
+      }
+      if (text) text.innerText = '正在暂存...';
+
+      if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = null;
+      }
+
+      return new Promise((resolve) => {
+        autoSaveTimer = setTimeout(async () => {
+          autoSaveTimer = null;
+          if (currentSeq !== draftSaveSeq || isClearing) {
+            resolve(false);
+            return;
+          }
+
+          try {
+            const currentM = (window.TESLA_MODELS && window.TESLA_MODELS[state.currentModel]);
+            const draft = {
+              version: '1.2',
+              timestamp: Date.now(),
+              savedAt: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
+              model: state.currentModel,
+              modelName: currentM ? currentM.name : state.currentModel,
+              bgColor: state.bgColor,
+              enableBg: state.enableBg,
+              autoClipOnExport: state.autoClipOnExport,
+              exportFileName: state.exportFileName,
+              layers: state.layers.map(l => ({
+                id: l.id,
+                name: l.name,
+                src: l.src,
+                x: l.x,
+                y: l.y,
+                width: l.width,
+                height: l.height,
+                rotation: l.rotation,
+                opacity: l.opacity,
+                flipH: l.flipH,
+                flipV: l.flipV,
+                visible: l.visible,
+                locked: l.locked
+              }))
+            };
+
+            const saveFn = (typeof window !== 'undefined' && window.saveDraftToStorage) ? window.saveDraftToStorage : saveDraftToStorage;
+            const success = await saveFn(draft);
+            if (currentSeq !== draftSaveSeq || isClearing) {
+              resolve(false);
+              return;
+            }
+
+            if (dot) {
+              dot.classList.remove('saving');
+              dot.style.background = success ? '#10b981' : '#ef4444';
+            }
+
+            if (success) {
+              if (text) text.innerText = `已暂存 ${draft.savedAt}`;
+              const badge = document.getElementById('draftStatusBadge');
+              if (badge) badge.title = `本地草稿已于 ${draft.savedAt} 实时暂存`;
+
+              const btnClear = document.getElementById('btnClearDraft');
+              if (btnClear) btnClear.style.display = draft.layers.length > 0 ? 'inline-block' : 'none';
+              const btnManual = document.getElementById('btnRestoreDraftManual');
+              if (btnManual) btnManual.style.display = 'inline-block';
+            } else {
+              if (text) text.innerText = '暂存失败';
+              const badge = document.getElementById('draftStatusBadge');
+              if (badge) badge.title = '本地草稿暂存失败（存储配额受限或被禁用）';
+            }
+            resolve(success);
+          } catch (e) {
+            console.warn('Auto-save error:', e);
+            if (currentSeq !== draftSaveSeq) {
+              resolve(false);
+              return;
+            }
+            if (dot) {
+              dot.classList.remove('saving');
+              dot.style.background = '#ef4444';
+            }
+            if (text) text.innerText = '暂存失败';
+            const badge = document.getElementById('draftStatusBadge');
+            if (badge) badge.title = '本地草稿暂存异常：' + e.message;
+            resolve(false);
+          }
+        }, 400);
+      });
+    }
+
+    async function checkSavedDraftOnStartup() {
+      try {
+        const loadFn = (typeof window !== 'undefined' && window.loadDraftFromStorage) ? window.loadDraftFromStorage : loadDraftFromStorage;
+        const draft = await loadFn();
+        if (!draft) {
+          const text = document.getElementById('draftStatusText');
+          if (text) text.innerText = '草稿已就绪';
+          const dot = document.getElementById('draftDot');
+          if (dot) dot.style.background = '#10b981';
+          hideDraftRestoreBanner();
+          const btnClear = document.getElementById('btnClearDraft');
+          if (btnClear) btnClear.style.display = 'none';
+          const btnManual = document.getElementById('btnRestoreDraftManual');
+          if (btnManual) btnManual.style.display = 'none';
+          return;
+        }
+
+        const hasLayers = Array.isArray(draft.layers) && draft.layers.length > 0;
+        const hasCustomBg = (draft.enableBg === false) || (draft.bgColor && draft.bgColor !== '#ffffff');
+        const hasCustomModel = draft.model && draft.model !== 'modely-l';
+
+        if (hasLayers || hasCustomBg || hasCustomModel) {
+          const btnClear = document.getElementById('btnClearDraft');
+          if (btnClear) btnClear.style.display = 'inline-block';
+          const btnManual = document.getElementById('btnRestoreDraftManual');
+          if (btnManual) btnManual.style.display = 'inline-block';
+
+          const text = document.getElementById('draftStatusText');
+          if (text) text.innerText = `已缓存草稿 (${draft.savedAt || '未完成'})`;
+          const dot = document.getElementById('draftDot');
+          if (dot) dot.style.background = '#10b981';
+
+          const banner = document.getElementById('draftRestoreBanner');
+          const desc = document.getElementById('draftBannerDesc');
+          if (banner && desc) {
+            const timeStr = draft.savedAt || (draft.timestamp ? new Date(draft.timestamp).toLocaleTimeString('zh-CN', { hour12: false }) : '');
+            const mName = draft.modelName || draft.model || 'Model Y L';
+            const count = draft.layers ? draft.layers.length : 0;
+            desc.innerText = `车型：${mName} · ${count} 个图层 · 暂存时间：${timeStr}`;
+            banner.style.display = 'flex';
+            if (state.isFitMode) adjustZoom('fit');
+          }
+        } else {
+          hideDraftRestoreBanner();
+          const text = document.getElementById('draftStatusText');
+          if (text) text.innerText = '草稿已就绪';
+          const dot = document.getElementById('draftDot');
+          if (dot) dot.style.background = '#10b981';
+          const btnClear = document.getElementById('btnClearDraft');
+          if (btnClear) btnClear.style.display = 'none';
+          const btnManual = document.getElementById('btnRestoreDraftManual');
+          if (btnManual) btnManual.style.display = 'none';
+        }
+      } catch (e) {
+        console.warn('checkSavedDraftOnStartup error:', e);
+      }
+    }
+
+    // Expose helpers on window for test verification & external modules
+    window.openDraftDB = openDraftDB;
+    window.saveDraftToStorage = saveDraftToStorage;
+    window.loadDraftFromStorage = loadDraftFromStorage;
+    window.clearDraftStorage = clearDraftStorage;
+    window.clearCurrentDraft = clearCurrentDraft;
+    window.triggerAutoSave = triggerAutoSave;
+
+    // --- Application State ---
+    const state = {
+      layers: [],
+      selectedLayerId: null,
+      zoom: 1.0,
+      isFitMode: true,
+      showTemplate: true,
+      clipPreview: false,
+      safetyAlert: true,
+      enableBg: true,
+      currentModel: 'modely-l',
+      bgColor: '#ffffff',
+      autoClipOnExport: true,
+      exportFileName: 'Tesla_Wrap_Custom.png',
+      currentExportSize: 0,
+      // Drag/Transform State
+      isDragging: false,
+      isTransforming: false,
+      transformHandle: null,
+      startX: 0,
+      startY: 0,
+      initialLayerState: null,
+      // Navigation & Pan State
+      isSpacePressed: false,
+      isPanning: false,
+      panStartX: 0,
+      panStartY: 0,
+      scrollStartX: 0,
+      scrollStartY: 0,
+      // Undo / Redo
+      undoStack: [],
+      redoStack: []
+    };
+    window.state = state;
+
+    // Canvas Elements
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const wrapper = document.getElementById('canvasWrapper');
+    const zoomContainer = document.getElementById('canvasZoomContainer');
+    const viewport = document.getElementById('canvasViewport');
+
+    // Offscreen mask canvas for Model Y L template
+    let templateImg = new Image();
+    let maskCanvas = document.createElement('canvas');
+    maskCanvas.width = 1024;
+    maskCanvas.height = 1024;
+    let maskCtx = maskCanvas.getContext('2d');
+    let maskData = null;
+    let maskCanvasReady = false;
+
+    // Recommended Hero Placements
+    const HERO_RECOMMENDED_POS = {
+      ironman: { x: 512, y: 250, w: 160, h: 160, rot: 0, desc: '机盖' },
+      spiderman: { x: 120, y: 380, w: 130, h: 150, rot: 0, desc: '主驾前门' },
+      cap: { x: 125, y: 645, w: 120, h: 140, rot: 0, desc: '主驾后门' },
+      drstrange: { x: 900, y: 380, w: 130, h: 150, rot: 0, desc: '副驾前门' },
+      thor: { x: 896, y: 647, w: 120, h: 140, rot: 0, desc: '副驾后门' },
+      hulk: { x: 512, y: 250, w: 160, h: 160, rot: 0, desc: '机盖' }
+    };
+
+    let uploadSlotIndex = 0;
+    const UPLOAD_SLOTS = [
+      { x: 512, y: 245, desc: '机盖' },
+      { x: 115, y: 395, desc: '主驾前门' },
+      { x: 920, y: 395, desc: '副驾前门' },
+      { x: 120, y: 650, desc: '主驾后门' },
+      { x: 900, y: 650, desc: '副驾后门' },
+      { x: 512, y: 735, desc: '车顶/后备箱' }
+    ];
+
+    function showToast(msg, duration = 2200) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    // --- History State Management (Undo/Redo) ---
+    function getSnapshotString() {
+      return JSON.stringify({
+        model: state.currentModel,
+        layers: state.layers.map(l => ({
+          id: l.id,
+          name: l.name,
+          src: l.src,
+          x: l.x,
+          y: l.y,
+          width: l.width,
+          height: l.height,
+          rotation: l.rotation,
+          opacity: l.opacity,
+          flipH: l.flipH,
+          flipV: l.flipV,
+          visible: l.visible,
+          locked: l.locked
+        })),
+        bgColor: state.bgColor,
+        enableBg: state.enableBg
+      });
+    }
+
+    function saveHistory() {
+      const snapshot = getSnapshotString();
+      state.undoStack.push(snapshot);
+      if (state.undoStack.length > 30) state.undoStack.shift();
+      state.redoStack = [];
+      updateHistoryButtons();
+      requestUpdateExportSize();
+      if (!isSystemInitializing) {
+        triggerAutoSave();
+      }
+    }
+
+    function updateHistoryButtons() {
+      document.getElementById('btnUndo').disabled = state.undoStack.length <= 1;
+      document.getElementById('btnRedo').disabled = state.redoStack.length === 0;
+    }
+
+    function undo() {
+      if (state.undoStack.length <= 1) return;
+      const current = state.undoStack.pop();
+      state.redoStack.push(current);
+      const previous = state.undoStack[state.undoStack.length - 1];
+      restoreFromSnapshot(previous, false).then(() => {
+        updateHistoryButtons();
+      }).catch(err => {
+        console.error('Undo failed:', err);
+      });
+    }
+
+    function redo() {
+      if (state.redoStack.length === 0) return;
+      const next = state.redoStack.pop();
+      state.undoStack.push(next);
+      restoreFromSnapshot(next, false).then(() => {
+        updateHistoryButtons();
+      }).catch(err => {
+        console.error('Redo failed:', err);
+      });
+    }
+
+    // --- Safe & Atomic Snapshot Restoration ---
+    function restoreFromSnapshot(snapshotInput, isProjectLoad = false) {
+      return new Promise((resolve, reject) => {
+        let data;
+        try {
+          data = typeof snapshotInput === 'string' ? JSON.parse(snapshotInput) : snapshotInput;
+        } catch (err) {
+          const msg = '工程文件损坏：JSON 格式解析失败。\n当前画布作品与底漆设置已完整保留。';
+          alert(msg);
+          return reject(new Error(msg));
+        }
+
+        if (!data || typeof data !== 'object') {
+          const msg = '工程文件损坏：数据格式无效。\n当前画布作品与底漆设置已完整保留。';
+          alert(msg);
+          return reject(new Error(msg));
+        }
+
+        if (!Array.isArray(data.layers)) {
+          const msg = '工程文件格式不合规：缺少有效的图层列表。\n当前画布作品与底漆设置已完整保留。';
+          alert(msg);
+          return reject(new Error(msg));
+        }
+
+        const imagePromises = data.layers.map((layerData, idx) => {
+          return new Promise((resImg, rejImg) => {
+            if (!layerData || typeof layerData !== 'object' || !layerData.src || typeof layerData.src !== 'string') {
+              return rejImg(new Error(`图层 #${idx + 1} ("${layerData && layerData.name ? layerData.name : '未命名'}") 缺少有效图片数据`));
+            }
+            const img = new Image();
+            img.onload = () => {
+              resImg({
+                id: layerData.id || ('layer_' + Date.now() + '_' + Math.floor(Math.random() * 10000) + '_' + idx),
+                name: layerData.name || `图层 ${idx + 1}`,
+                src: layerData.src,
+                img: img,
+                x: typeof layerData.x === 'number' ? layerData.x : 512,
+                y: typeof layerData.y === 'number' ? layerData.y : 512,
+                width: typeof layerData.width === 'number' ? layerData.width : (img.naturalWidth || 200),
+                height: typeof layerData.height === 'number' ? layerData.height : (img.naturalHeight || 200),
+                naturalWidth: img.naturalWidth || 200,
+                naturalHeight: img.naturalHeight || 200,
+                rotation: typeof layerData.rotation === 'number' ? layerData.rotation : 0,
+                opacity: typeof layerData.opacity === 'number' ? layerData.opacity : 1,
+                flipH: !!layerData.flipH,
+                flipV: !!layerData.flipV,
+                visible: layerData.visible !== false,
+                locked: !!layerData.locked
+              });
+            };
+            img.onerror = () => {
+              rejImg(new Error(`图层 #${idx + 1} ("${layerData.name || '未命名'}") 图片损坏或解码失败`));
+            };
+            img.src = layerData.src;
+          });
+        });
+
+        Promise.all(imagePromises).then((loadedLayers) => {
+          let targetModel = data.model;
+          if (targetModel === 'Model Y L') targetModel = 'modely-l';
+          const switchPromise = (targetModel && window.TESLA_MODELS && window.TESLA_MODELS[targetModel] && targetModel !== state.currentModel)
+            ? switchModel(targetModel, true)
+            : Promise.resolve();
+
+          return switchPromise.then(() => {
+            if (data.bgColor !== undefined) state.bgColor = data.bgColor;
+            if (data.enableBg !== undefined) state.enableBg = data.enableBg !== false;
+
+            document.getElementById('bgColorPicker').value = state.bgColor;
+            document.getElementById('bgColorText').value = state.bgColor;
+            document.getElementById('chkEnableBg').checked = state.enableBg;
+
+            if (data.exportFileName) {
+              const nameInput = document.getElementById('exportFileName');
+              if (nameInput) nameInput.value = data.exportFileName;
+              state.exportFileName = data.exportFileName;
+            }
+            if (data.autoClipOnExport !== undefined) {
+              state.autoClipOnExport = data.autoClipOnExport !== false;
+              const chkClip = document.getElementById('chkAutoClipOnExport');
+              if (chkClip) chkClip.checked = state.autoClipOnExport;
+            }
+
+            state.layers = loadedLayers;
+            if (!state.layers.some(l => l.id === state.selectedLayerId)) {
+              state.selectedLayerId = state.layers.length ? state.layers[state.layers.length - 1].id : null;
+            }
+
+            if (isProjectLoad) {
+              state.undoStack = [getSnapshotString()];
+              state.redoStack = [];
+              updateHistoryButtons();
+              showToast('工程加载成功！');
+            }
+
+            updateLayerListUI();
+            updatePropertyPanel();
+            render();
+            requestUpdateExportSize();
+            if (!isSystemInitializing) triggerAutoSave();
+            resolve(loadedLayers);
+          });
+        }).catch((err) => {
+          alert(`工程加载拦截：${err.message}。\n当前画布作品与底漆设置已完整保留。`);
+          reject(err);
+        });
+      });
+    }
+
+    function loadProjectFile(jsonStr) {
+      return restoreFromSnapshot(jsonStr, true);
+    }
+
+    // --- Build Pure Binary Paintable Mask for Any Tesla Model ---
+    function buildBinaryMask(modelId) {
+      return new Promise((resolve) => {
+        const mId = modelId || state.currentModel || 'modely-l';
+        const model = (window.TESLA_MODELS && window.TESLA_MODELS[mId]) ||
+                      (window.TESLA_PRESETS && window.TESLA_PRESETS.models && window.TESLA_PRESETS.models[mId]) ||
+                      { width: 1024, height: 1024, template: (window.TESLA_PRESETS ? window.TESLA_PRESETS.template : '') };
+        if (!model.template) { resolve(); return; }
+        const mw = model.width || 1024;
+        const mh = model.height || 1024;
+
+        canvas.width = mw;
+        canvas.height = mh;
+        canvas.style.width = mw + 'px';
+        canvas.style.height = mh + 'px';
+        wrapper.style.width = mw + 'px';
+        wrapper.style.height = mh + 'px';
+        maskCanvas.width = mw;
+        maskCanvas.height = mh;
+        maskCanvasReady = false;
+
+        templateImg.onload = () => {
+          maskCtx.clearRect(0, 0, mw, mh);
+          maskCtx.drawImage(templateImg, 0, 0, mw, mh);
+          const imgData = maskCtx.getImageData(0, 0, mw, mh);
+          const d = imgData.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const isPaintable = d[i+3] >= 200 && d[i] >= 200 && d[i+1] >= 200 && d[i+2] >= 200;
+            if (isPaintable) {
+              d[i] = 255;
+              d[i+1] = 255;
+              d[i+2] = 255;
+              d[i+3] = 255;
+            } else {
+              d[i] = 0;
+              d[i+1] = 0;
+              d[i+2] = 0;
+              d[i+3] = 0;
+            }
+          }
+          maskCtx.putImageData(imgData, 0, 0);
+          maskData = d;
+          maskCanvasReady = true;
+
+          if (state.isFitMode) {
+            adjustZoom('fit');
+          } else {
+            adjustZoom(state.zoom);
+          }
+          render();
+          checkCompliance();
+          requestUpdateExportSize();
+          resolve(model);
+        };
+        templateImg.src = model.template;
+        if (templateImg.complete && templateImg.naturalWidth > 0) {
+          templateImg.onload();
+        }
+      });
+    }
+
+    // --- Switch Official Vehicle Model ---
+    function switchModel(modelId, preserveLayers = true) {
+      if (!window.TESLA_MODELS || !window.TESLA_MODELS[modelId]) return Promise.resolve();
+      const model = window.TESLA_MODELS[modelId];
+      state.currentModel = modelId;
+      const mw = model.width || 1024;
+      const mh = model.height || 1024;
+
+      const sel = document.getElementById('modelSelect');
+      if (sel && sel.value !== modelId) sel.value = modelId;
+      const resBadge = document.getElementById('modelResBadge');
+      if (resBadge) resBadge.innerText = `${mw}×${mh}`;
+      const btnLabel = document.getElementById('modelBtnLabel');
+      if (btnLabel) btnLabel.innerText = `🚘 ${model.name}`;
+      const ruleRes = document.getElementById('ruleRes');
+      if (ruleRes) ruleRes.innerText = `${mw} × ${mh} (合规)`;
+      const vThumb = document.getElementById('vehicleThumbImg');
+      if (vThumb && model.vehicleImage) vThumb.src = model.vehicleImage;
+      const vName = document.getElementById('vehicleNameDisplay');
+      if (vName) {
+        vName.innerText = model.name;
+        vName.title = model.name;
+      }
+      const vSub = document.getElementById('vehicleSpecDisplay');
+      if (vSub) {
+        const specText = model.subtitle.includes(String(mw)) ? model.subtitle : `${model.subtitle} · ${mw}×${mh}`;
+        vSub.innerText = specText;
+        vSub.title = specText;
+      }
+      const vSeries = document.getElementById('vehicleSeriesTag');
+      if (vSeries) vSeries.innerText = model.series;
+      const btnPNG = document.getElementById('btnExportPNG');
+      if (btnPNG) btnPNG.title = `导出 ${mw}×${mh} 车规 PNG 贴图`;
+
+      const expModel = document.getElementById('expCheckModel');
+      if (expModel) expModel.innerText = model.name;
+      const expRes = document.getElementById('expCheckRes');
+      if (expRes) expRes.innerText = `${mw} × ${mh}`;
+
+      const nameInput = document.getElementById('exportFileName');
+      if (nameInput && (!state.hasCustomName || nameInput.value.endsWith('_Wrap.png') || nameInput.value.endsWith('_Custom.png') || nameInput.value.includes('Model') || nameInput.value.includes('Cybertruck'))) {
+        nameInput.value = model.defaultFileName || `${modelId}_wrap.png`;
+        state.exportFileName = nameInput.value;
+      }
+
+      document.querySelectorAll('.model-option-card').forEach(card => {
+        const isActive = card.dataset.id === modelId;
+        card.classList.toggle('active', isActive);
+        card.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      updateStatusBar();
+      showToast(`已切换至 ${model.name}（${mw}×${mh}）`);
+      return buildBinaryMask(modelId);
+    }
+
+    // --- Build Dynamic Model Popover Modal ---
+    function renderModelSelectorList() {
+      const container = document.getElementById('modelListContainer');
+      if (!container || !window.TESLA_MODELS) return;
+      container.innerHTML = '';
+
+      const groups = [
+        { label: 'Model Y 系列', ids: ['modely-l', 'modely', 'modely-2025-base', 'modely-2025-premium', 'modely-2025-performance'] },
+        { label: 'Model 3 系列', ids: ['model3', 'model3-2024-base', 'model3-2024-performance'] },
+        { label: 'Cybertruck 赛博皮卡', ids: ['cybertruck'] },
+        { label: 'Model S 系列', ids: ['models-2021', 'models-2025-plaid'] },
+        { label: 'Model X 系列', ids: ['modelx-2021'] }
+      ];
+
+      groups.forEach(g => {
+        const title = document.createElement('div');
+        title.className = 'model-group-title';
+        title.innerText = g.label;
+        container.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'model-list-grid';
+
+        g.ids.forEach(mId => {
+          const m = window.TESLA_MODELS[mId];
+          if (!m) return;
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = `model-option-card ${mId === state.currentModel ? 'active' : ''}`;
+          card.dataset.id = mId;
+          card.setAttribute('role', 'option');
+          card.setAttribute('aria-selected', mId === state.currentModel ? 'true' : 'false');
+          card.innerHTML = `
+            <img src="${m.vehicleImage || ''}" class="model-card-thumb" alt="${m.name}">
+            <div class="model-card-info">
+              <div class="model-card-name">${m.name}</div>
+              <div class="model-card-desc">${m.subtitle} · ${m.width}×${m.height}</div>
+            </div>
+          `;
+          card.onclick = () => {
+            switchModel(mId).then(() => {
+              if (!isSystemInitializing) triggerAutoSave();
+            });
+            closeAllPopovers(true);
+          };
+          grid.appendChild(card);
+        });
+
+        container.appendChild(grid);
+      });
+    }
+
+    // --- Status Bar Updates ---
+    function updateStatusBar() {
+      const curM = window.TESLA_MODELS ? window.TESLA_MODELS[state.currentModel] : null;
+      const mw = canvas.width || 1024;
+      const mh = canvas.height || 1024;
+      const modelEl = document.getElementById('statusModel');
+      if (modelEl) {
+        modelEl.innerText = curM ? `${curM.name} (${curM.series})` : 'Model Y L';
+      }
+      const dimEl = document.getElementById('statusDimensions');
+      if (dimEl) dimEl.innerText = `${mw} × ${mh} px`;
+
+      const selLayer = getSelectedLayer();
+      const selEl = document.getElementById('statusSelectedLayer');
+      if (selEl) {
+        selEl.innerText = selLayer ? `${selLayer.name} (${Math.round(selLayer.width)}×${Math.round(selLayer.height)})` : '未选中图层';
+      }
+
+      let overflowCount = 0;
+      state.layers.forEach(l => {
+        if (l.visible && isLayerOverflowing(l)) overflowCount++;
+      });
+      const ovEl = document.getElementById('statusOverflow');
+      if (ovEl) {
+        ovEl.innerText = `${overflowCount} 越界`;
+        ovEl.style.color = overflowCount > 0 ? 'var(--warning)' : 'var(--text-muted)';
+      }
+      const inspectBadge = document.getElementById('tabInspectBadge');
+      if (inspectBadge) {
+        inspectBadge.innerText = `${overflowCount} 越界`;
+        inspectBadge.className = `tab-badge ${overflowCount > 0 ? 'warn' : ''}`;
+      }
+      const expOverflow = document.getElementById('expCheckOverflow');
+      if (expOverflow) {
+        expOverflow.innerText = overflowCount > 0 ? `${overflowCount} 处超出白区 (导出时裁切)` : '0 越界';
+      }
+
+      const zoomEl = document.getElementById('statusZoom');
+      if (zoomEl) zoomEl.innerText = `${Math.round(state.zoom * 100)}%`;
+    }
+
+    // --- Initialization ---
+    function init() {
+      document.getElementById('btnModelTrigger').onclick = (e) => togglePopover('modelSelectModal', e);
+      document.getElementById('btnProjectMenu').onclick = (e) => togglePopover('projectMenuDropdown', e);
+      document.getElementById('draftStatusBadge').onclick = (e) => togglePopover('draftPopover', e);
+      document.getElementById('btnExportMenu').onclick = (e) => {
+        updateStatusBar();
+        togglePopover('exportPanelModal', e);
+      };
+      document.getElementById('btnDisplaySettings').onclick = (e) => togglePopover('displaySettingsDropdown', e);
+
+      document.getElementById('menuItemOpen').onclick = () => {
+        closeAllPopovers(true);
+        document.getElementById('btnOpenProject').click();
+      };
+      document.getElementById('menuItemSave').onclick = () => {
+        closeAllPopovers(true);
+        document.getElementById('btnSaveProject').click();
+      };
+
+      const modelSel = document.getElementById('modelSelect');
+      if (modelSel) {
+        modelSel.onchange = (e) => {
+          switchModel(e.target.value).then(() => {
+            if (!isSystemInitializing) triggerAutoSave();
+          });
+        };
+      }
+
+      renderModelSelectorList();
+
+      switchModel('modely-l', true).then(() => {
+        isSystemInitializing = false;
+        checkSavedDraftOnStartup();
+      });
+
+      const presetContainer = document.getElementById('presetContainer');
+      if (window.TESLA_PRESETS && window.TESLA_PRESETS.heroes) {
+        presetContainer.innerHTML = '';
+        window.TESLA_PRESETS.heroes.forEach(hero => {
+          const rec = HERO_RECOMMENDED_POS[hero.id];
+          const recName = rec ? rec.desc : '车身';
+          const card = document.createElement('button');
+          card.type = 'button';
+          card.className = 'preset-card';
+          card.setAttribute('aria-label', `${hero.name} 预设素材（添加到${recName}）`);
+          card.title = `点击添加到 ${recName}`;
+          card.innerHTML = `
+            <img src="${hero.src}" alt="${hero.name}">
+            <span class="preset-name">${hero.name}</span>
+            <span class="preset-desc">${recName}</span>
+          `;
+          card.onclick = () => {
+            hideDraftRestoreBanner();
+            addLayerFromPreset(hero);
+          };
+          presetContainer.appendChild(card);
+        });
+      }
+
+      setupEventListeners();
+      window.addEventListener('resize', () => {
+        if (state.isFitMode) adjustZoom('fit');
+      });
+      setTimeout(() => adjustZoom('fit'), 50);
+      saveHistory();
+      updatePropertyPanel();
+      updateStatusBar();
+    }
+
+    // --- Layer Operations ---
+    function addLayerFromPreset(hero) {
+      const rec = HERO_RECOMMENDED_POS[hero.id] || { x: 512, y: 245, w: 200, h: 200, rot: 0 };
+      addLayerFromSrc(hero.src, hero.name, rec.x, rec.y, rec.w, rec.h, rec.rot);
+    }
+
+    function addLayerFromSrc(src, name = '未命名图层', defaultX, defaultY, defaultW, defaultH, defaultRot = 0) {
+      hideDraftRestoreBanner();
+      const img = new Image();
+      img.onload = () => {
+        let w = img.naturalWidth;
+        let h = img.naturalHeight;
+        const maxInit = 240;
+        if (w > maxInit || h > maxInit) {
+          const ratio = Math.min(maxInit / w, maxInit / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+
+        let posX = defaultX;
+        let posY = defaultY;
+        let posW = defaultW || w;
+        let posH = defaultH || h;
+
+        if (posX === undefined || posY === undefined) {
+          const slot = UPLOAD_SLOTS[uploadSlotIndex % UPLOAD_SLOTS.length];
+          uploadSlotIndex++;
+          posX = slot.x;
+          posY = slot.y;
+        }
+
+        const newLayer = {
+          id: 'layer_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+          name: name,
+          src: src,
+          img: img,
+          x: posX,
+          y: posY,
+          width: posW,
+          height: posH,
+          naturalWidth: img.naturalWidth,
+          naturalHeight: img.naturalHeight,
+          rotation: defaultRot,
+          opacity: 1,
+          flipH: false,
+          flipV: false,
+          visible: true,
+          locked: false
+        };
+
+        state.layers.push(newLayer);
+        state.selectedLayerId = newLayer.id;
+        saveHistory();
+        switchLeftTab('layers');
+        updateLayerListUI();
+        updatePropertyPanel();
+        render();
+        updateStatusBar();
+        showToast(`已添加图层：${name}`);
+      };
+      img.src = src;
+    }
+
+    function getSelectedLayer() {
+      return state.layers.find(l => l.id === state.selectedLayerId);
+    }
+
+    function deleteSelectedLayer() {
+      const layer = getSelectedLayer();
+      if (!layer || layer.locked) return;
+      state.layers = state.layers.filter(l => l.id !== layer.id);
+      state.selectedLayerId = state.layers.length ? state.layers[state.layers.length - 1].id : null;
+      saveHistory();
+      updateLayerListUI();
+      updatePropertyPanel();
+      render();
+      updateStatusBar();
+      showToast(`已删除图层`);
+    }
+
+    function duplicateSelectedLayer() {
+      const layer = getSelectedLayer();
+      if (!layer || layer.locked) return;
+      const clone = {
+        ...layer,
+        id: 'layer_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+        name: layer.name + ' 副本',
+        x: Math.min(950, layer.x + 20),
+        y: Math.min(950, layer.y + 20),
+        locked: false
+      };
+      state.layers.push(clone);
+      state.selectedLayerId = clone.id;
+      saveHistory();
+      updateLayerListUI();
+      updatePropertyPanel();
+      render();
+      updateStatusBar();
+      showToast(`已复制图层`);
+    }
+
+    // --- UI Updates ---
+    function updateLayerListUI() {
+      const list = document.getElementById('layerList');
+      list.innerHTML = '';
+      document.getElementById('layerCountText').innerText = `${state.layers.length}`;
+
+      const reversed = [...state.layers].reverse();
+      reversed.forEach((layer) => {
+        const item = document.createElement('div');
+        const isOverflow = isLayerOverflowing(layer);
+        item.className = `layer-item ${layer.id === state.selectedLayerId ? 'active' : ''}`;
+        item.onclick = (e) => {
+          if (e.target.closest('.layer-btn')) return;
+          state.selectedLayerId = layer.id;
+          updateLayerListUI();
+          updatePropertyPanel();
+          render();
+          updateStatusBar();
+        };
+
+        item.innerHTML = `
+          <img src="${layer.src}" class="layer-thumb">
+          <span class="layer-name" title="${layer.name}">
+            <span>${layer.name}</span>
+            ${isOverflow ? '<span class="tag-warn" title="部分超出车漆区域">越界</span>' : ''}
+          </span>
+          <div class="layer-actions">
+            <button class="layer-btn ${layer.visible ? '' : 'active-flag'}" title="${layer.visible ? '隐藏' : '显示'}" onclick="toggleLayerVisibility('${layer.id}')">
+              ${layer.visible ? '👁️' : '🙈'}
+            </button>
+            <button class="layer-btn ${layer.locked ? 'active-flag' : ''}" title="${layer.locked ? '解锁' : '锁定'}" onclick="toggleLayerLock('${layer.id}')">
+              ${layer.locked ? '🔒' : '🔓'}
+            </button>
+            <button class="layer-btn" title="上移" ${layer.locked ? 'disabled' : ''} onclick="moveLayer('${layer.id}', 1)">▲</button>
+            <button class="layer-btn" title="下移" ${layer.locked ? 'disabled' : ''} onclick="moveLayer('${layer.id}', -1)">▼</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    window.toggleLayerVisibility = function(id) {
+      const l = state.layers.find(x => x.id === id);
+      if (l) {
+        l.visible = !l.visible;
+        saveHistory();
+        updateLayerListUI();
+        render();
+        updateStatusBar();
+      }
+    };
+
+    window.toggleLayerLock = function(id) {
+      const l = state.layers.find(x => x.id === id);
+      if (l) {
+        l.locked = !l.locked;
+        saveHistory();
+        updateLayerListUI();
+        updatePropertyPanel();
+        render();
+      }
+    };
+
+    window.moveLayer = function(id, dir) {
+      const l = state.layers.find(x => x.id === id);
+      if (l && l.locked) {
+        showToast('已锁定的图层无法调整层级');
+        return;
+      }
+      const idx = state.layers.findIndex(x => x.id === id);
+      if (idx === -1) return;
+      const targetIdx = idx + dir;
+      if (targetIdx >= 0 && targetIdx < state.layers.length) {
+        const temp = state.layers[idx];
+        state.layers[idx] = state.layers[targetIdx];
+        state.layers[targetIdx] = temp;
+        saveHistory();
+        updateLayerListUI();
+        render();
+      }
+    };
+
+    function updatePropertyPanel() {
+      const layer = getSelectedLayer();
+      const form = document.getElementById('selectionPropsForm');
+      const empty = document.getElementById('noSelectionMsg');
+      const lockedNotice = document.getElementById('lockedNotice');
+      const overflowNotice = document.getElementById('overflowNotice');
+
+      if (!layer) {
+        form.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      form.style.display = 'flex';
+
+      const isLocked = !!layer.locked;
+      lockedNotice.style.display = isLocked ? 'flex' : 'none';
+      overflowNotice.style.display = (!isLocked && isLayerOverflowing(layer)) ? 'flex' : 'none';
+
+      const propInputs = ['propX', 'propY', 'propW', 'propH', 'propRotation', 'propOpacity'];
+      propInputs.forEach(id => {
+        const el = document.getElementById(id);
+        el.disabled = isLocked;
+        el.readOnly = isLocked;
+      });
+      document.getElementById('btnFlipH').disabled = isLocked;
+      document.getElementById('btnFlipV').disabled = isLocked;
+      document.getElementById('btnDuplicateLayer').disabled = isLocked;
+      document.getElementById('btnDeleteLayer').disabled = isLocked;
+
+      document.getElementById('propX').value = Math.round(layer.x);
+      document.getElementById('propY').value = Math.round(layer.y);
+      document.getElementById('propW').value = Math.round(layer.width);
+      document.getElementById('propH').value = Math.round(layer.height);
+      document.getElementById('propRotation').value = Math.round(layer.rotation);
+      document.getElementById('propRotValue').innerText = `${Math.round(layer.rotation)}°`;
+      document.getElementById('propOpacity').value = Math.round(layer.opacity * 100);
+      document.getElementById('propOpacityValue').innerText = `${Math.round(layer.opacity * 100)}%`;
+    }
+
+    // --- Rendering Pipeline ---
+    function render() {
+      const mw = canvas.width || 1024;
+      const mh = canvas.height || 1024;
+      ctx.clearRect(0, 0, mw, mh);
+
+      // 1. Draw Base Paint Background
+      if (state.enableBg) {
+        ctx.fillStyle = state.bgColor;
+        ctx.fillRect(0, 0, mw, mh);
+      }
+
+      // 2. Draw Layers
+      state.layers.forEach(layer => {
+        if (!layer.visible) return;
+        ctx.save();
+        ctx.translate(layer.x, layer.y);
+        ctx.rotate((layer.rotation * Math.PI) / 180);
+        ctx.scale(layer.flipH ? -1 : 1, layer.flipV ? -1 : 1);
+        ctx.globalAlpha = layer.opacity;
+        ctx.drawImage(
+          layer.img,
+          -layer.width / 2,
+          -layer.height / 2,
+          layer.width,
+          layer.height
+        );
+        ctx.restore();
+      });
+
+      // 3. Finished Product Preview
+      const shouldClip = state.clipPreview && state.autoClipOnExport;
+      if (shouldClip && maskCanvasReady) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.drawImage(maskCanvas, 0, 0, mw, mh);
+        ctx.restore();
+      }
+
+      // 4. Official Template Outline Overlay
+      if (state.showTemplate && templateImg.complete) {
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.drawImage(templateImg, 0, 0, mw, mh);
+        ctx.restore();
+      }
+
+      // 5. Draw Selection Handles & Safety Warning
+      const layer = getSelectedLayer();
+      if (layer) {
+        drawSelectionHandles(layer);
+      }
+
+      checkCompliance();
+      updateStatusBar();
+    }
+
+    // --- Transform Handles Math ---
+    function drawSelectionHandles(layer) {
+      ctx.save();
+      ctx.translate(layer.x, layer.y);
+      ctx.rotate((layer.rotation * Math.PI) / 180);
+
+      const halfW = layer.width / 2;
+      const halfH = layer.height / 2;
+
+      const isOverflow = state.safetyAlert && isLayerOverflowing(layer);
+      ctx.strokeStyle = layer.locked ? '#f59e0b' : (isOverflow ? '#f43f5e' : '#4389F7');
+      ctx.lineWidth = 1.5;
+      if (layer.locked) {
+        ctx.setLineDash([4, 4]);
+      } else {
+        ctx.setLineDash([]);
+      }
+      ctx.strokeRect(-halfW, -halfH, layer.width, layer.height);
+      ctx.setLineDash([]);
+
+      if (!layer.locked) {
+        const rotHandleDist = 26;
+        ctx.beginPath();
+        ctx.moveTo(0, -halfH);
+        ctx.lineTo(0, -halfH - rotHandleDist);
+        ctx.strokeStyle = '#4389F7';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(0, -halfH - rotHandleDist, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#4389F7';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        const handleCoords = [
+          [-halfW, -halfH], [0, -halfH], [halfW, -halfH],
+          [halfW, 0], [halfW, halfH], [0, halfH],
+          [-halfW, halfH], [-halfW, 0]
+        ];
+
+        handleCoords.forEach(([hx, hy]) => {
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = '#4389F7';
+          ctx.lineWidth = 1.5;
+          ctx.fillRect(hx - 4, hy - 4, 8, 8);
+          ctx.strokeRect(hx - 4, hy - 4, 8, 8);
+        });
+
+        if (state.isTransforming && state.transformHandle === 'rot') {
+          const degStr = `${Math.round(layer.rotation)}°`;
+          ctx.font = 'bold 11px sans-serif';
+          const textW = ctx.measureText(degStr).width;
+          const badgeY = -halfH - rotHandleDist - 16;
+          ctx.fillStyle = 'rgba(16, 19, 24, 0.9)';
+          ctx.fillRect(-textW / 2 - 5, badgeY - 10, textW + 10, 16);
+          ctx.strokeStyle = '#4389F7';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(-textW / 2 - 5, badgeY - 10, textW + 10, 16);
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(degStr, 0, badgeY - 2);
+        }
+      }
+
+      if (isOverflow) {
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(-halfW - 3, -halfH - 3, layer.width + 6, layer.height + 6);
+      }
+
+      ctx.restore();
+    }
+
+    function isLayerOverflowing(layer) {
+      if (!maskData || !maskCanvasReady) return false;
+      const hw = layer.width / 2;
+      const hh = layer.height / 2;
+      const rad = (layer.rotation * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      const mw = canvas.width || 1024;
+      const mh = canvas.height || 1024;
+      const checkLocal = (lx, ly) => {
+        const gx = Math.round(layer.x + lx * cos - ly * sin);
+        const gy = Math.round(layer.y + lx * sin + ly * cos);
+        if (gx < 0 || gx >= mw || gy < 0 || gy >= mh) return true;
+        const idx = (gy * mw + gx) * 4;
+        return maskData[idx + 3] === 0;
+      };
+
+      return checkLocal(0, 0) ||
+             checkLocal(-hw, -hh) || checkLocal(hw, -hh) ||
+             checkLocal(hw, hh) || checkLocal(-hw, hh) ||
+             checkLocal(0, -hh) || checkLocal(0, hh) ||
+             checkLocal(-hw, 0) || checkLocal(hw, 0);
+    }
+
+    // --- Canvas Interaction (Mouse/Drag/Transform/Pan/Zoom) ---
+    function getCanvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      const mw = canvas.width || 1024;
+      const scale = mw / rect.width;
+      return {
+        x: (e.clientX - rect.left) * scale,
+        y: (e.clientY - rect.top) * scale
+      };
+    }
+
+    function worldToLocal(layer, gx, gy) {
+      const dx = gx - layer.x;
+      const dy = gy - layer.y;
+      const rad = -(layer.rotation * Math.PI) / 180;
+      return {
+        x: dx * Math.cos(rad) - dy * Math.sin(rad),
+        y: dx * Math.sin(rad) + dy * Math.cos(rad)
+      };
+    }
+
+    function hitTest(gx, gy) {
+      const layer = getSelectedLayer();
+      if (layer && !layer.locked) {
+        const local = worldToLocal(layer, gx, gy);
+        const hw = layer.width / 2;
+        const hh = layer.height / 2;
+
+        const rotY = -hh - 26;
+        if (Math.hypot(local.x, local.y - rotY) <= 10) {
+          return { type: 'handle', handle: 'rot', layer };
+        }
+
+        const handles = [
+          { name: 'nw', x: -hw, y: -hh }, { name: 'n', x: 0, y: -hh },
+          { name: 'ne', x: hw, y: -hh }, { name: 'e', x: hw, y: 0 },
+          { name: 'se', x: hw, y: hh }, { name: 's', x: 0, y: hh },
+          { name: 'sw', x: -hw, y: hh }, { name: 'w', x: -hw, y: 0 }
+        ];
+
+        for (const h of handles) {
+          if (Math.abs(local.x - h.x) <= 8 && Math.abs(local.y - h.y) <= 8) {
+            return { type: 'handle', handle: h.name, layer };
+          }
+        }
+      }
+
+      for (let i = state.layers.length - 1; i >= 0; i--) {
+        const l = state.layers[i];
+        if (!l.visible) continue;
+        const local = worldToLocal(l, gx, gy);
+        const hw = l.width / 2;
+        const hh = l.height / 2;
+        if (Math.abs(local.x) <= hw && Math.abs(local.y) <= hh) {
+          return { type: 'layer', layer: l };
+        }
+      }
+
+      return null;
+    }
+
+    // Spacebar Pan Setup
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA', 'BUTTON', 'SELECT'].includes(e.target.tagName) || (e.target && e.target.closest && e.target.closest('button, [role="button"]'))) return;
+      if (e.code === 'Space' && !state.isSpacePressed) {
+        state.isSpacePressed = true;
+        viewport.classList.add('grab');
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        state.isSpacePressed = false;
+        viewport.classList.remove('grab');
+        viewport.classList.remove('grabbing');
+      }
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      if (state.isSpacePressed || e.button === 1) {
+        state.isPanning = true;
+        state.panStartX = e.clientX;
+        state.panStartY = e.clientY;
+        state.scrollStartX = viewport.scrollLeft;
+        state.scrollStartY = viewport.scrollTop;
+        viewport.classList.add('grabbing');
+        return;
+      }
+
+      const pt = getCanvasPoint(e);
+      const hit = hitTest(pt.x, pt.y);
+
+      if (hit) {
+        if (hit.type === 'handle') {
+          state.isTransforming = true;
+          state.transformHandle = hit.handle;
+          state.startX = pt.x;
+          state.startY = pt.y;
+          state.initialLayerState = { ...hit.layer };
+        } else if (hit.type === 'layer') {
+          state.selectedLayerId = hit.layer.id;
+          updateLayerListUI();
+          updatePropertyPanel();
+          updateStatusBar();
+          if (!hit.layer.locked) {
+            state.isDragging = true;
+            state.startX = pt.x;
+            state.startY = pt.y;
+            state.initialLayerState = { ...hit.layer };
+          } else {
+            state.isDragging = false;
+          }
+        }
+      } else {
+        state.selectedLayerId = null;
+        updateLayerListUI();
+        updatePropertyPanel();
+        updateStatusBar();
+      }
+      render();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (state.isPanning) {
+        const dx = e.clientX - state.panStartX;
+        const dy = e.clientY - state.panStartY;
+        viewport.scrollLeft = state.scrollStartX - dx;
+        viewport.scrollTop = state.scrollStartY - dy;
+        return;
+      }
+
+      const pt = getCanvasPoint(e);
+      const layer = getSelectedLayer();
+
+      if (!state.isDragging && !state.isTransforming && !state.isSpacePressed) {
+        const hit = hitTest(pt.x, pt.y);
+        if (hit) {
+          if (hit.type === 'handle') {
+            const h = hit.handle;
+            if (h === 'rot') canvas.style.cursor = 'grab';
+            else if (['nw', 'se'].includes(h)) canvas.style.cursor = 'nwse-resize';
+            else if (['ne', 'sw'].includes(h)) canvas.style.cursor = 'nesw-resize';
+            else if (['w', 'e'].includes(h)) canvas.style.cursor = 'ew-resize';
+            else if (['n', 's'].includes(h)) canvas.style.cursor = 'ns-resize';
+          } else if (hit.type === 'layer') {
+            canvas.style.cursor = hit.layer.locked ? 'default' : 'move';
+          }
+        } else {
+          canvas.style.cursor = 'default';
+        }
+      }
+
+      if (!layer || layer.locked) return;
+
+      if (state.isDragging) {
+        const dx = pt.x - state.startX;
+        const dy = pt.y - state.startY;
+        layer.x = Math.round(state.initialLayerState.x + dx);
+        layer.y = Math.round(state.initialLayerState.y + dy);
+        updatePropertyPanel();
+        render();
+      } else if (state.isTransforming) {
+        const init = state.initialLayerState;
+        if (state.transformHandle === 'rot') {
+          const angleRad = Math.atan2(pt.y - init.y, pt.x - init.x);
+          let deg = (angleRad * 180) / Math.PI + 90;
+          if (deg > 180) deg -= 360;
+          if (deg < -180) deg += 360;
+          const snaps = [0, 90, 180, -90, -180];
+          snaps.forEach(s => {
+            if (Math.abs(deg - s) < 3.5) deg = s;
+          });
+          layer.rotation = Math.round(deg);
+        } else {
+          const rad = (init.rotation * Math.PI) / 180;
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
+          const dx = pt.x - state.startX;
+          const dy = pt.y - state.startY;
+          const localDx = dx * cos + dy * sin;
+          const localDy = -dx * sin + dy * cos;
+
+          let newW = init.width;
+          let newH = init.height;
+          const aspect = init.width / init.height;
+
+          if (['se', 'nw', 'ne', 'sw'].includes(state.transformHandle)) {
+            if (e.shiftKey) {
+              if (state.transformHandle === 'se') { newW = init.width + localDx * 2; newH = init.height + localDy * 2; }
+              if (state.transformHandle === 'nw') { newW = init.width - localDx * 2; newH = init.height - localDy * 2; }
+              if (state.transformHandle === 'ne') { newW = init.width + localDx * 2; newH = init.height - localDy * 2; }
+              if (state.transformHandle === 'sw') { newW = init.width - localDx * 2; newH = init.height + localDy * 2; }
+            } else {
+              let scaleFactor = 1;
+              if (state.transformHandle === 'se') scaleFactor = 1 + (localDx + localDy) / (init.width + init.height);
+              if (state.transformHandle === 'nw') scaleFactor = 1 - (localDx + localDy) / (init.width + init.height);
+              if (state.transformHandle === 'ne') scaleFactor = 1 + (localDx - localDy) / (init.width + init.height);
+              if (state.transformHandle === 'sw') scaleFactor = 1 - (localDx - localDy) / (init.width + init.height);
+              scaleFactor = Math.max(0.1, scaleFactor);
+              newW = Math.round(init.width * scaleFactor);
+              newH = Math.round(newW / aspect);
+            }
+          } else if (['e', 'w'].includes(state.transformHandle)) {
+            const delta = state.transformHandle === 'e' ? localDx * 2 : -localDx * 2;
+            newW = Math.max(20, Math.round(init.width + delta));
+            newH = Math.round(newW / aspect);
+          } else if (['s', 'n'].includes(state.transformHandle)) {
+            const delta = state.transformHandle === 's' ? localDy * 2 : -localDy * 2;
+            newH = Math.max(20, Math.round(init.height + delta));
+            newW = Math.round(newH * aspect);
+          }
+
+          layer.width = Math.min(2048, Math.max(20, Math.round(newW)));
+          layer.height = Math.min(2048, Math.max(20, Math.round(newH)));
+        }
+        updatePropertyPanel();
+        render();
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (state.isPanning) {
+        state.isPanning = false;
+        viewport.classList.remove('grabbing');
+      }
+      if (state.isDragging || state.isTransforming) {
+        state.isDragging = false;
+        state.isTransforming = false;
+        saveHistory();
+        render();
+      }
+    });
+
+    // Pointer-centered Wheel Zoom on Canvas Viewport
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = viewport.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      const cw = canvas.width || 1024;
+      const ch = canvas.height || 1024;
+      const oldZoom = state.zoom;
+      const factor = e.deltaY < 0 ? 1.1 : 0.909;
+      let newZoom = Math.max(0.2, Math.min(3.0, oldZoom * factor));
+      newZoom = Math.round(newZoom * 1000) / 1000;
+
+      state.isFitMode = false;
+      adjustZoom(newZoom);
+    }, { passive: false });
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const anyOpen = document.querySelector('.popover-menu.show');
+        if (anyOpen) {
+          e.preventDefault();
+          closeAllPopovers(true);
+          return;
+        }
+      }
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      const layer = getSelectedLayer();
+
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (layer && !layer.locked) {
+          e.preventDefault();
+          deleteSelectedLayer();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        adjustZoom('fit');
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+        e.preventDefault();
+        redo();
+      } else if (layer && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+        if (layer.locked) {
+          e.preventDefault();
+          return;
+        }
+        e.preventDefault();
+        const step = e.shiftKey ? 10 : 1;
+        if (e.key === 'ArrowLeft') layer.x -= step;
+        if (e.key === 'ArrowRight') layer.x += step;
+        if (e.key === 'ArrowUp') layer.y -= step;
+        if (e.key === 'ArrowDown') layer.y += step;
+        saveHistory();
+        updatePropertyPanel();
+        render();
+      }
+    });
+
+    // --- Viewport Zoom & Fit ---
+    function adjustZoom(target) {
+      const label = document.getElementById('zoomLevelLabel');
+      const cw = canvas.width || 1024;
+      const ch = canvas.height || 1024;
+      const banner = document.getElementById('draftRestoreBanner');
+      const isBannerShown = (banner && banner.style.display !== 'none');
+
+      if (target === 'fit' || target === undefined) {
+        state.isFitMode = true;
+        const bannerExtra = isBannerShown ? Math.max(0, banner.offsetHeight + 6) : 0;
+        const availW = Math.max(100, viewport.clientWidth - 48);
+        const availH = Math.max(100, viewport.clientHeight - 48 - bannerExtra);
+        state.zoom = Math.min(availW / cw, availH / ch, 1.0);
+        state.zoom = Math.floor(state.zoom * 1000) / 1000;
+      } else {
+        state.isFitMode = false;
+        state.zoom = Number(target);
+      }
+
+      const scaledW = Math.round(cw * state.zoom);
+      const scaledH = Math.round(ch * state.zoom);
+      zoomContainer.style.width = `${scaledW}px`;
+      zoomContainer.style.height = `${scaledH}px`;
+      zoomContainer.style.marginTop = (state.isFitMode && isBannerShown) ? `${Math.round(banner.offsetHeight / 2 + 10)}px` : '0px';
+      wrapper.style.width = `${cw}px`;
+      wrapper.style.height = `${ch}px`;
+      wrapper.style.transform = `scale(${state.zoom})`;
+      wrapper.style.transformOrigin = '0 0';
+
+      if (label) label.innerText = `${Math.round(state.zoom * 100)}%`;
+      document.getElementById('btnZoomFit').style.borderColor = state.isFitMode ? 'var(--accent)' : 'var(--border-color)';
+      document.getElementById('btnZoom100').style.borderColor = (!state.isFitMode && state.zoom === 1) ? 'var(--accent)' : 'var(--border-color)';
+      updateStatusBar();
+    }
+
+    // --- Real-time File Size & Compliance Engine ---
+    let sizeCalcTimer = null;
+    function requestUpdateExportSize() {
+      const ruleSize = document.getElementById('ruleSize');
+      const expSize = document.getElementById('expCheckSize');
+      if (ruleSize) {
+        ruleSize.className = '';
+        ruleSize.innerText = '计算中...';
+      }
+      if (expSize) {
+        expSize.className = '';
+        expSize.innerText = '计算中...';
+      }
+      if (sizeCalcTimer) clearTimeout(sizeCalcTimer);
+      sizeCalcTimer = setTimeout(calcExportSize, 200);
+    }
+
+    function calcExportSize() {
+      const ruleSize = document.getElementById('ruleSize');
+      const expSize = document.getElementById('expCheckSize');
+      try {
+        const expCanvas = generateExportCanvas();
+        expCanvas.toBlob((blob) => {
+          if (!blob) {
+            if (ruleSize) { ruleSize.className = 'warn'; ruleSize.innerText = '生成中'; }
+            if (expSize) { expSize.className = 'warn'; expSize.innerText = '生成中'; }
+            return;
+          }
+          state.currentExportSize = blob.size;
+          const kb = (blob.size / 1024).toFixed(1);
+          const okClass = blob.size <= 1024 * 1024 ? 'ok' : 'err';
+          const text = blob.size <= 1024 * 1024 ? `${kb} KB (≤ 1 MB 合规)` : `${kb} KB (超限 > 1 MB)`;
+          if (ruleSize) {
+            ruleSize.className = okClass;
+            ruleSize.innerText = text;
+          }
+          if (expSize) {
+            expSize.className = okClass;
+            expSize.innerText = text;
+          }
+        }, 'image/png');
+      } catch (err) {
+        if (ruleSize) { ruleSize.className = 'warn'; ruleSize.innerText = '待计算'; }
+        if (expSize) { expSize.className = 'warn'; expSize.innerText = '待计算'; }
+      }
+    }
+
+    function checkCompliance() {
+      const rawName = document.getElementById('exportFileName').value.trim();
+      const nameOk = /^[a-zA-Z0-9_\-\s]+\.png$/i.test(rawName) && rawName.length <= 30 && rawName.length > 0;
+      const ruleName = document.getElementById('ruleName');
+      if (nameOk) {
+        ruleName.className = 'ok';
+        ruleName.innerText = `合规 (${rawName.length} 字符)`;
+      } else {
+        ruleName.className = 'err';
+        ruleName.innerText = rawName.length > 30 ? `超长 (${rawName.length}/30)` : '须以 .png 结尾且仅限英文字符';
+      }
+
+      let overflowCount = 0;
+      state.layers.forEach(l => {
+        if (l.visible && isLayerOverflowing(l)) overflowCount++;
+      });
+      const ruleOverflow = document.getElementById('ruleOverflow');
+      if (overflowCount === 0) {
+        ruleOverflow.className = 'ok';
+        ruleOverflow.innerText = '0 溢出 (完全位于白区内)';
+      } else {
+        ruleOverflow.className = 'warn';
+        ruleOverflow.innerText = `${overflowCount} 处溢出 (已标记警告框)`;
+      }
+
+      const activeLayer = getSelectedLayer();
+      const overflowNotice = document.getElementById('overflowNotice');
+      if (overflowNotice && activeLayer) {
+        overflowNotice.style.display = (!activeLayer.locked && isLayerOverflowing(activeLayer)) ? 'flex' : 'none';
+      }
+    }
+
+    // --- Official Car Export Engine ---
+    function validateExportFileName(raw) {
+      const name = raw.trim();
+      if (!name) {
+        alert('导出拦截：文件名不能为空！');
+        return null;
+      }
+      if (name.length > 30) {
+        alert(`导出拦截：文件名长度为 ${name.length} 字符，超过特斯拉官方 30 字符上限！\n请修改为简短文件名。`);
+        return null;
+      }
+      if (!/^[a-zA-Z0-9_\-\s]+\.png$/i.test(name)) {
+        alert('导出拦截：文件名必须以 .png 结尾，且仅包含字母、数字、下划线、横杠与空格！');
+        return null;
+      }
+      return name;
+    }
+
+    function generateExportCanvas() {
+      const mw = canvas.width || 1024;
+      const mh = canvas.height || 1024;
+      const expCanvas = document.createElement('canvas');
+      expCanvas.width = mw;
+      expCanvas.height = mh;
+      const expCtx = expCanvas.getContext('2d');
+
+      if (state.enableBg) {
+        expCtx.fillStyle = state.bgColor;
+        expCtx.fillRect(0, 0, mw, mh);
+      }
+
+      state.layers.forEach(layer => {
+        if (!layer.visible) return;
+        expCtx.save();
+        expCtx.translate(layer.x, layer.y);
+        expCtx.rotate((layer.rotation * Math.PI) / 180);
+        expCtx.scale(layer.flipH ? -1 : 1, layer.flipV ? -1 : 1);
+        expCtx.globalAlpha = layer.opacity;
+        expCtx.drawImage(
+          layer.img,
+          -layer.width / 2,
+          -layer.height / 2,
+          layer.width,
+          layer.height
+        );
+        expCtx.restore();
+      });
+
+      if (state.autoClipOnExport && maskCanvasReady) {
+        expCtx.save();
+        expCtx.globalCompositeOperation = 'destination-in';
+        expCtx.drawImage(maskCanvas, 0, 0, mw, mh);
+        expCtx.restore();
+      }
+
+      return expCanvas;
+    }
+
+    document.getElementById('btnExportPNG').onclick = () => {
+      const fileName = validateExportFileName(document.getElementById('exportFileName').value);
+      if (!fileName) return;
+
+      const expCanvas = generateExportCanvas();
+      expCanvas.toBlob((blob) => {
+        if (!blob) {
+          alert('导出失败：无法生成图片数据。');
+          return;
+        }
+        if (blob.size > 1024 * 1024) {
+          alert(`导出拦截：文件大小达到 ${(blob.size / 1024).toFixed(1)} KB，超过特斯拉车机 1 MB 限制！\n请减少图层数量或缩小部分高分辨率图片。`);
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`导出成功！体积 ${(blob.size / 1024).toFixed(1)} KB`);
+        requestUpdateExportSize();
+      }, 'image/png');
+    };
+
+    document.getElementById('btnExportZip').onclick = () => {
+      const fileName = validateExportFileName(document.getElementById('exportFileName').value);
+      if (!fileName) return;
+
+      const expCanvas = generateExportCanvas();
+      expCanvas.toBlob((blob) => {
+        if (!blob) {
+          alert('导出失败：无法生成图片数据。');
+          return;
+        }
+        if (blob.size > 1024 * 1024) {
+          alert(`导出拦截：文件大小达到 ${(blob.size / 1024).toFixed(1)} KB，超过特斯拉车机 1 MB 限制！`);
+          return;
+        }
+        blob.arrayBuffer().then((buffer) => {
+          const zipBlob = buildWrapsZip(fileName, new Uint8Array(buffer));
+          const url = URL.createObjectURL(zipBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName.replace(/\.png$/i, '') + '_UDisk_Wraps.zip';
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast(`已生成 U 盘结构压缩包！`);
+        });
+      }, 'image/png');
+    };
+
+    function buildWrapsZip(filename, fileBytes) {
+      const fullPath = 'Wraps/' + filename;
+      const pathBytes = new TextEncoder().encode(fullPath);
+      const crc = crc32(fileBytes);
+      const now = new Date();
+      const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+      const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+
+      const localHeader = new Uint8Array(30 + pathBytes.length + fileBytes.length);
+      const dvLocal = new DataView(localHeader.buffer);
+      dvLocal.setUint32(0, 0x04034b50, true);
+      dvLocal.setUint16(4, 20, true);
+      dvLocal.setUint16(6, 0, true);
+      dvLocal.setUint16(8, 0, true);
+      dvLocal.setUint16(10, dosTime, true);
+      dvLocal.setUint16(12, dosDate, true);
+      dvLocal.setUint32(14, crc, true);
+      dvLocal.setUint32(18, fileBytes.length, true);
+      dvLocal.setUint32(22, fileBytes.length, true);
+      dvLocal.setUint16(26, pathBytes.length, true);
+      dvLocal.setUint16(28, 0, true);
+      localHeader.set(pathBytes, 30);
+      localHeader.set(fileBytes, 30 + pathBytes.length);
+
+      const centralDir = new Uint8Array(46 + pathBytes.length);
+      const dvCD = new DataView(centralDir.buffer);
+      dvCD.setUint32(0, 0x02014b50, true);
+      dvCD.setUint16(4, 20, true);
+      dvCD.setUint16(6, 20, true);
+      dvCD.setUint16(8, 0, true);
+      dvCD.setUint16(10, 0, true);
+      dvCD.setUint16(12, dosTime, true);
+      dvCD.setUint16(14, dosDate, true);
+      dvCD.setUint32(16, crc, true);
+      dvCD.setUint32(20, fileBytes.length, true);
+      dvCD.setUint32(24, fileBytes.length, true);
+      dvCD.setUint16(28, pathBytes.length, true);
+      dvCD.setUint16(30, 0, true);
+      dvCD.setUint16(32, 0, true);
+      dvCD.setUint16(34, 0, true);
+      dvCD.setUint16(36, 0, true);
+      dvCD.setUint32(38, 0, true);
+      dvCD.setUint32(42, 0, true);
+      centralDir.set(pathBytes, 46);
+
+      const eocd = new Uint8Array(22);
+      const dvEOCD = new DataView(eocd.buffer);
+      dvEOCD.setUint32(0, 0x06054b50, true);
+      dvEOCD.setUint16(4, 0, true);
+      dvEOCD.setUint16(6, 0, true);
+      dvEOCD.setUint16(8, 1, true);
+      dvEOCD.setUint16(10, 1, true);
+      dvEOCD.setUint32(12, centralDir.length, true);
+      dvEOCD.setUint32(16, localHeader.length, true);
+      dvEOCD.setUint16(20, 0, true);
+
+      return new Blob([localHeader, centralDir, eocd], { type: 'application/zip' });
+    }
+
+    function crc32(bytes) {
+      let c = 0 ^ (-1);
+      for (let i = 0; i < bytes.length; i++) {
+        c = (c >>> 8) ^ crcTable[(c ^ bytes[i]) & 0xFF];
+      }
+      return (c ^ (-1)) >>> 0;
+    }
+    const crcTable = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      crcTable[n] = c;
+    }
+
+    // --- Save / Open Project Handlers ---
+    document.getElementById('btnSaveProject').onclick = () => {
+      const currentM = (window.TESLA_MODELS && window.TESLA_MODELS[state.currentModel]);
+      const project = {
+        version: '1.2',
+        model: state.currentModel,
+        modelName: currentM ? currentM.name : state.currentModel,
+        timestamp: new Date().toISOString(),
+        bgColor: state.bgColor,
+        enableBg: state.enableBg,
+        layers: state.layers.map(l => ({
+          id: l.id,
+          name: l.name,
+          src: l.src,
+          x: l.x,
+          y: l.y,
+          width: l.width,
+          height: l.height,
+          rotation: l.rotation,
+          opacity: l.opacity,
+          flipH: l.flipH,
+          flipV: l.flipV,
+          visible: l.visible,
+          locked: l.locked
+        }))
+      };
+
+      const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (document.getElementById('exportFileName').value.replace(/\.png$/i, '') || 'tesla_wrap') + '.project.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('工程已保存至本地 JSON！');
+    };
+
+    document.getElementById('btnOpenProject').onclick = () => {
+      document.getElementById('projectFileInput').click();
+    };
+
+    document.getElementById('projectFileInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        loadProjectFile(evt.target.result);
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    };
+
+    // --- Event Listeners Setup ---
+    function setupEventListeners() {
+      document.getElementById('btnUndo').onclick = undo;
+      document.getElementById('btnRedo').onclick = redo;
+
+      const btnRestore = document.getElementById('btnRestoreDraft');
+      if (btnRestore) {
+        btnRestore.onclick = async () => {
+          const draft = await loadDraftFromStorage();
+          if (!draft) {
+            showToast('未找到可恢复的本地草稿');
+            hideDraftRestoreBanner();
+            return;
+          }
+          try {
+            await restoreFromSnapshot(draft, true);
+            hideDraftRestoreBanner();
+            showToast('已成功恢复本地草稿！');
+            triggerAutoSave();
+          } catch (err) {
+            console.error('Failed to restore draft:', err);
+          }
+        };
+      }
+
+      const btnDiscard = document.getElementById('btnDiscardDraft');
+      if (btnDiscard) {
+        btnDiscard.onclick = () => {
+          hideDraftRestoreBanner();
+        };
+      }
+
+      const btnRestoreManual = document.getElementById('btnRestoreDraftManual');
+      if (btnRestoreManual) {
+        btnRestoreManual.onclick = async () => {
+          const draft = await loadDraftFromStorage();
+          if (!draft) {
+            showToast('未找到可恢复的本地草稿');
+            return;
+          }
+          try {
+            await restoreFromSnapshot(draft, true);
+            hideDraftRestoreBanner();
+            showToast('已从缓存恢复最新草稿');
+            triggerAutoSave();
+          } catch (err) {
+            console.error('Failed to manual restore draft:', err);
+          }
+        };
+      }
+
+      const btnClearDraft = document.getElementById('btnClearDraft');
+      if (btnClearDraft) {
+        btnClearDraft.onclick = async () => {
+          const isRetry = btnClearDraft.innerText.includes('重试');
+          if (!isRetry) {
+            if (!confirm('确定要清空当前的本地草稿记录吗？\n清空后将无法通过此提示恢复未保存内容（当前画布作品仍会保留）。')) {
+              return;
+            }
+          }
+          const ok = await clearCurrentDraft();
+          if (ok) {
+            showToast('本地草稿已清空');
+          } else {
+            const mode = (clearCurrentDraft.lastResult && clearCurrentDraft.lastResult.mode) || '';
+            if (mode === 'shielded') {
+              showToast('已屏蔽旧稿，但数据库未彻底删除，可点击重试');
+            } else {
+              showToast('清空失败，存储异常，可点击重试');
+            }
+          }
+        };
+      }
+
+      document.getElementById('chkShowTemplate').onchange = (e) => {
+        state.showTemplate = e.target.checked;
+        render();
+      };
+      document.getElementById('chkClipPreview').onchange = (e) => {
+        state.clipPreview = e.target.checked;
+        const notice = document.getElementById('clipNotice');
+        if (notice) notice.style.display = (state.clipPreview && state.autoClipOnExport) ? 'block' : 'none';
+        if (state.isFitMode) adjustZoom('fit');
+        render();
+      };
+      document.getElementById('chkSafetyAlert').onchange = (e) => {
+        state.safetyAlert = e.target.checked;
+        render();
+      };
+      document.getElementById('btnZoomFit').onclick = () => adjustZoom('fit');
+      document.getElementById('btnZoom100').onclick = () => adjustZoom(1.0);
+      document.getElementById('btnRecalcSize').onclick = calcExportSize;
+
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('fileInput');
+
+      dropZone.onclick = () => fileInput.click();
+      dropZone.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
+        }
+      };
+      dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('dragover'); };
+      dropZone.ondragleave = () => dropZone.classList.remove('dragover');
+      dropZone.ondrop = (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+      };
+      fileInput.onchange = (e) => handleFiles(e.target.files);
+
+      function handleFiles(files) {
+        Array.from(files).forEach(file => {
+          if (!file.type.startsWith('image/')) return;
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            addLayerFromSrc(evt.target.result, file.name.replace(/\.[^.]+$/, ''));
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      const colorPicker = document.getElementById('bgColorPicker');
+      const colorText = document.getElementById('bgColorText');
+      const enableBg = document.getElementById('chkEnableBg');
+
+      colorPicker.oninput = (e) => {
+        state.bgColor = e.target.value;
+        colorText.value = state.bgColor;
+        render();
+        requestUpdateExportSize();
+      };
+      colorPicker.onchange = () => saveHistory();
+
+      colorText.onchange = (e) => {
+        state.bgColor = e.target.value;
+        colorPicker.value = state.bgColor;
+        saveHistory();
+        render();
+        requestUpdateExportSize();
+      };
+
+      enableBg.onchange = (e) => {
+        state.enableBg = e.target.checked;
+        saveHistory();
+        render();
+        requestUpdateExportSize();
+      };
+
+      const bindNumericInput = (id, prop) => {
+        const el = document.getElementById(id);
+        const handleVal = (save) => {
+          const layer = getSelectedLayer();
+          if (!layer) return;
+          if (layer.locked) {
+            el.value = Math.round(layer[prop]);
+            return;
+          }
+          layer[prop] = parseFloat(el.value) || 0;
+          if (save) saveHistory();
+          render();
+          requestUpdateExportSize();
+        };
+        el.oninput = () => handleVal(false);
+        el.onchange = () => handleVal(true);
+      };
+      bindNumericInput('propX', 'x');
+      bindNumericInput('propY', 'y');
+      bindNumericInput('propW', 'width');
+      bindNumericInput('propH', 'height');
+
+      document.getElementById('propRotation').oninput = (e) => {
+        const layer = getSelectedLayer();
+        if (!layer) return;
+        if (layer.locked) {
+          e.target.value = Math.round(layer.rotation);
+          return;
+        }
+        layer.rotation = parseInt(e.target.value) || 0;
+        document.getElementById('propRotValue').innerText = `${layer.rotation}°`;
+        render();
+      };
+      document.getElementById('propRotation').onchange = () => {
+        const layer = getSelectedLayer();
+        if (!layer || layer.locked) return;
+        saveHistory();
+      };
+
+      document.getElementById('propOpacity').oninput = (e) => {
+        const layer = getSelectedLayer();
+        if (!layer) return;
+        if (layer.locked) {
+          e.target.value = Math.round(layer.opacity * 100);
+          return;
+        }
+        layer.opacity = (parseInt(e.target.value) || 0) / 100;
+        document.getElementById('propOpacityValue').innerText = `${Math.round(layer.opacity * 100)}%`;
+        render();
+        requestUpdateExportSize();
+      };
+      document.getElementById('propOpacity').onchange = () => {
+        const layer = getSelectedLayer();
+        if (!layer || layer.locked) return;
+        saveHistory();
+      };
+
+      document.getElementById('btnFlipH').onclick = () => {
+        const layer = getSelectedLayer();
+        if (layer && !layer.locked) { layer.flipH = !layer.flipH; saveHistory(); render(); requestUpdateExportSize(); }
+      };
+      document.getElementById('btnFlipV').onclick = () => {
+        const layer = getSelectedLayer();
+        if (layer && !layer.locked) { layer.flipV = !layer.flipV; saveHistory(); render(); requestUpdateExportSize(); }
+      };
+      document.getElementById('btnDuplicateLayer').onclick = () => {
+        const layer = getSelectedLayer();
+        if (layer && !layer.locked) duplicateSelectedLayer();
+      };
+      document.getElementById('btnDeleteLayer').onclick = () => {
+        const layer = getSelectedLayer();
+        if (layer && !layer.locked) deleteSelectedLayer();
+      };
+
+      document.getElementById('exportFileName').oninput = () => {
+        checkCompliance();
+        triggerAutoSave();
+      };
+      document.getElementById('chkAutoClipOnExport').onchange = (e) => {
+        state.autoClipOnExport = e.target.checked;
+        const chkClipPreview = document.getElementById('chkClipPreview');
+        const notice = document.getElementById('clipNotice');
+        if (!state.autoClipOnExport) {
+          chkClipPreview.checked = false;
+          chkClipPreview.disabled = true;
+          state.clipPreview = false;
+          if (notice) notice.style.display = 'none';
+        } else {
+          chkClipPreview.disabled = false;
+        }
+        const expCheckClip = document.getElementById('expCheckClip');
+        if (expCheckClip) {
+          expCheckClip.innerText = state.autoClipOnExport ? '已启用 (仅涂装区)' : '已关闭 (整图输出)';
+        }
+        if (state.isFitMode) adjustZoom('fit');
+        render();
+        requestUpdateExportSize();
+        triggerAutoSave();
+      };
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
